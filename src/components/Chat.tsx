@@ -31,7 +31,7 @@ export function Chat(socket: Socket) {
   return (
     <div className="chat">
         {messages.map((e) => {
-            return <p>{e}</p>
+            return <div className='message'><p>{e.name}</p>{e.text}</div>
         })}
     </div>
   );
