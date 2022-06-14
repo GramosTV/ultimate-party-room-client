@@ -20,6 +20,8 @@ interface Player {
     loaded?: number | undefined;
     duration?: number | undefined;
     seeking?: number | boolean | undefined;
+    playedSeconds?: number | undefined;
+    loadedSeconds?: number | undefined;
 }
 interface VideoPlayerProps {
     room: string;
@@ -53,6 +55,9 @@ export function VideoPlayer(props: VideoPlayerProps) {
           })
            }
         });
+        socket.on("videoMoment", (i) => {
+          (player.current as any).seekTo(parseFloat(String(i.videoMoment)))
+       });
     }, [])
     const { url, playing, controls, light, volume, muted, loop, played, loaded, duration, playbackRate, pip } = playerState
     const player = useRef(null)
@@ -68,7 +73,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
         setPlayerState(
             (actualState) => {
                 return {...actualState, volume: parseFloat(e.target.value)}
-        })
+        });
       }
       const handlePlayPause = () => {
         setPlayerState(
@@ -115,6 +120,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
       }
     
       const handleSeekMouseUp = (e: any) => {
+        socket.emit("videoMoment", {roomId: props.room, videoMoment: playerState.played}),
         setPlayerState((actualState) => {
             return {...actualState, seeking: false, playing: true}
       });
@@ -123,7 +129,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
     
       const handleProgress = (state: any) => {
         console.log('progress')
-        if (!playerState.seeking) {
+          if (!playerState.seeking) {
             setPlayerState((actualState) => {
                 return {...actualState, ...state}
           });
