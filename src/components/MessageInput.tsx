@@ -1,22 +1,25 @@
 import React, { useContext, useRef, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { SocketContext } from "../context/Socket";
+import { MessageEntity } from 'types'
 interface MessageInputProps {
     name: string;
+    room: string;
 }
 export const MessageInput = (props: MessageInputProps) => {
+  const {name, room} = props;
   const socket = useContext(SocketContext);
   const [messageText, setMessageText] = useState<string>('');
   const sendMessage = () => {
-    socket.emit("createMessage", { name: props.name, text: messageText }, (response: any) => {
+    socket.emit("createMessage", { name: props.name, text: messageText, roomId: props.room }, (response: MessageEntity) => {
       setMessageText("");
     });
   };
   let typingTimeout;
   const emitTyping = () => {
-    socket.emit("typing", { isTyping: true });
+    socket.emit("typing", { isTyping: true, roomId: room });
     typingTimeout = setTimeout(() => {
-      socket.emit("typing", { isTyping: false });
+      socket.emit("typing", { isTyping: false, roomId: room });
     }, 2000);
   };
   const handleChange = (e: React.ChangeEvent<any>) => {
