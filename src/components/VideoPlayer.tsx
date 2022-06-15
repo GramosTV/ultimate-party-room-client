@@ -30,7 +30,7 @@ interface VideoPlayerProps {
 export function VideoPlayer(props: VideoPlayerProps) {
     const socket = useContext(SocketContext);
     const [playerState, setPlayerState] = useState<Player>({
-        url: 'https://www.youtube.com/watch?v=5X96R-NT0hw',
+        url: undefined,
         pip: false,
         playing: true,
         controls: false,
