@@ -1,0 +1,89 @@
+.skip {
+  background-color: transparent;
+  border: none;
+  color: gray;
+  margin-top: 60px;
+  font-size: 20px;
+}
+.pfpForm {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: column;
+}
+.photoLabel {
+  width: 155px;
+  height: 155px;
+  font-size: 20px !important;
+  svg {
+    font-size: 30px;
+  }
+}
+
+[type="file"] {
+  height: 0;
+  overflow: hidden;
+  width: 0;
+}
+
+[type="file"] + label {
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  font-family: "Rubik", sans-serif;
+  font-size: inherit;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  outline: none;
+  padding: 1rem 50px;
+  position: relative;
+  transition: all 0.3s;
+  vertical-align: middle;
+
+
+  &.uploadBtn {
+    border-radius: 5px !important;
+    background-color: #0093e9;
+    background-image: linear-gradient(160deg, #0093e9 0%, #80d0c7 100%);
+    &.verified {
+      background-color: #20bf55;
+      background-image: linear-gradient(315deg, #20bf55 0%, #01baef 94%);
+    }
+    border-radius: 0;
+    overflow: hidden;
+
+    svg {
+      display: inline-block;
+      transition: all 0.3s;
+    }
+
+    &::before {
+      color: #fff;
+      content: "Upload";
+      font-size: 130%;
+      height: 100%;
+      left: 0;
+      line-height: 2.6;
+      position: absolute;
+      top: -180%;
+      transition: all 0.3s;
+      width: 100%;
+      -webkit-text-fill-color: #fff;
+    }
+    &.verified::before {
+        content: "Reconsidered?";
+    }
+
+    &:hover {
+      svg {
+        transform: translateY(300%);
+      }
+
+      &::before {
+        top: 0;
+      }
+    }
+  }
+}

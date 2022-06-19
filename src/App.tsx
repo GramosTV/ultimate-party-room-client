@@ -17,9 +17,9 @@ export function App() {
   const [joinedRoom, setJoinedRoom] = useState<boolean>(false)
   const [name, setName] = useState<string>('')
   const [room, setRoom] = useState<string>('')
-  const join = (name: string) => {
-    socket.emit('join', {name}, (names: any) => {
-        setName(name)
+  const [pfpForm, setPfpForm] = useState<boolean>(false)
+  const join = () => {
+    socket.emit('join', {name}, () => {
         setJoined(true)
     })
   }
@@ -31,7 +31,7 @@ export function App() {
       {joinedRoom ? <Chat name={name} room={room}/> : null}
       {joinedRoom ? <SketchCanvas room={room} /> : null}
       {joinedRoom ? <UserList room={room}/> : null}
-      {joined ? <RoomList room={room} setJoinedRoom={setJoinedRoom} setRoom={setRoom} /> : <><NameForm join={join}/><ProfilePicUpload /></>}
+      {joined ? <RoomList room={room} setJoinedRoom={setJoinedRoom} setRoom={setRoom} /> : (pfpForm ? <ProfilePicUpload join={join}/> : <NameForm setPfpForm={setPfpForm} setName={setName}/>)}
     </div>
     </SocketProvider>
   );
