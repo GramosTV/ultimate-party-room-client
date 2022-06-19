@@ -1,8 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './style/video.css';
+import 'animate.css';
 import './index.css';
+import './style/video.css';
 import './style/canvas.css';
+import './style/userList.css';
+import './style/roomList.css';
+import './style/nameForm.css';
+import './style/pfpForm.css';
+import './style/app.css';
 import { App } from './App';
 import reportWebVitals from './reportWebVitals';
 
