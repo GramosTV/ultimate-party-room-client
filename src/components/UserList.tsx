@@ -31,12 +31,23 @@ export function UserList(props: RoomsListProps) {
   return (
     <>
     <div className='roomList'>
-        {users.map(user => (
-            <div key={user.id}>
-            <b>{user.name}</b>
-            <br />
-            </div>
+        <div className="userBox">
+            <h3>
+                Users in Room
+            </h3>
+            <div className="list">
+            {users.map(user => (
+                <div className='user' key={user.id}>
+                <div className="imgBx">
+                    {user.profilePicture ? <img src={`http://localhost:3001/photos/${user.profilePicture}`} alt={user.name + "'s profile picture"} /> : <img src={`http://localhost:3001/photos/default.png`} alt={user.name + "'s profile picture"} />}    
+                </div>
+                <div className="content">
+                    <h4>{user.name}</h4>
+                </div>
+                </div>
         ))}
+            </div>
+        </div>
     </div>
     </>
   )
