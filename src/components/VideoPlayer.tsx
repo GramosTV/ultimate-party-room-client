@@ -1,4 +1,10 @@
-import React, { ChangeEvent, ChangeEventHandler, useContext, useMemo, useRef, useState } from "react";
+import React, {
+  ChangeEvent,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import ReactPlayer from "react-player/lazy";
 import { SourceProps } from "react-player/base";
 import { findDOMNode } from "react-dom";
@@ -28,7 +34,7 @@ interface VideoPlayerProps {
 }
 // PLEASE DON'T TELL JAKUB KRÓL ABOUT THE ANY's HERE, the example js code from the react-player package is pretty old that's why I had to skip types for some of the stuff here, forgive me.
 export function VideoPlayer(props: VideoPlayerProps) {
-  const {room} = props 
+  const { room } = props;
   const socket = useContext(SocketContext);
   const [playerState, setPlayerState] = useState<Player>({
     url: undefined,
@@ -44,28 +50,37 @@ export function VideoPlayer(props: VideoPlayerProps) {
     playbackRate: 1.0,
     loop: false,
   });
+  const videoMomentFlag = useRef(false);
   useMemo(() => {
+    setPlayerState((prevState) => ({ ...prevState, url: undefined }));
+    setPlayerState((actualState) => {
+      return { ...actualState, playing: true };
+    });
     socket.on("videoState", (videoState: VideoState) => {
+      setPlayerState((actualState) => {
+        return { ...actualState, playing: Boolean(videoState) };
+      });
       if (videoState === VideoState.pause) {
-        setPlayerState((actualState) => {
-          return { ...actualState, playing: false };
-        });
-      } else if (videoState === VideoState.play) {
-        setPlayerState((actualState) => {
-          return { ...actualState, playing: true };
-        });
+        socket.emit(
+          "getVideoMoment",
+          { roomId: room },
+          (videoMoment: number) => {
+            (player.current as any).seekTo(parseFloat(String(videoMoment)));
+          }
+        );
       }
     });
     socket.on("updateVideoUrl", (videoUrl: string) => {
-      setPlayerState((prevState) => ({...prevState, url: videoUrl }));
+      console.log(videoUrl);
+      setPlayerState((prevState) => ({ ...prevState, url: videoUrl }));
     });
     socket.on("videoMoment", (videoMoment: number) => {
       (player.current as any).seekTo(parseFloat(String(videoMoment)));
     });
-    socket.emit("getVideoUrl", {roomId: room}, (videoUrl: string) => {
-      setPlayerState((prevState) => ({...prevState, url: videoUrl }));
+    socket.emit("getVideoUrl", { roomId: room }, (videoUrl: string) => {
+      setPlayerState((prevState) => ({ ...prevState, url: videoUrl }));
     });
-  }, []);
+  }, [room]);
   const {
     url,
     playing,
@@ -100,32 +115,23 @@ export function VideoPlayer(props: VideoPlayerProps) {
   };
 
   const handleStop = () => {
-    setPlayerState((actualState) => {
-      return { ...actualState, url: undefined, playing: false };
-    });
+    // setPlayerState((actualState) => {
+    //   return { ...actualState, url: undefined, playing: false };
+    // });
   };
 
   const handlePause = () => {
-    socket.emit(
-      "videoState",
-      { roomId: room, videoState: VideoState.pause },
-      () => {
-        return null;
-      }
-    );
+    socket.emit("videoState", { roomId: room, videoState: VideoState.pause });
     setPlayerState((actualState) => {
       return { ...actualState, playing: false };
+    });
+    socket.emit("getVideoMoment", { roomId: room }, (videoMoment: number) => {
+      (player.current as any).seekTo(parseFloat(String(videoMoment)));
     });
   };
 
   const handlePlay = () => {
-    socket.emit(
-      "videoState",
-      { roomId: room, videoState: VideoState.play },
-      () => {
-        return null;
-      }
-    );
+    socket.emit("videoState", { roomId: room, videoState: VideoState.play });
     setPlayerState((actualState) => {
       return { ...actualState, playing: true };
     });
@@ -152,9 +158,10 @@ export function VideoPlayer(props: VideoPlayerProps) {
       roomId: room,
       videoMoment: playerState.played,
     });
-      setPlayerState((actualState) => {
-        return { ...actualState, seeking: false, playing: true };
-      });
+    socket.emit("videoState", { roomId: room, videoState: VideoState.play });
+    setPlayerState((actualState) => {
+      return { ...actualState, seeking: false, playing: true };
+    });
     (player.current as any).seekTo(parseFloat(e.target.value));
   };
 
@@ -164,10 +171,12 @@ export function VideoPlayer(props: VideoPlayerProps) {
       setPlayerState((actualState) => {
         return { ...actualState, ...state };
       });
-      socket.emit("updateVideoMoment", {
-        roomId: room,
-        videoMoment: playerState.played,
-      })
+      if (videoMomentFlag.current) {
+        socket.emit("updateVideoMoment", {
+          roomId: room,
+          videoMoment: playerState.played,
+        });
+      }
     }
   };
 
@@ -180,13 +189,9 @@ export function VideoPlayer(props: VideoPlayerProps) {
     });
   };
   const handleUrlInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setUrlInput(e.currentTarget.value)
-    socket.emit("updateVideoUrl", {
-      roomId: room,
-      videoUrl: e.currentTarget.value,
-    })
-  }
-  const [urlInput, setUrlInput] = useState('')
+    setUrlInput(e.currentTarget.value);
+  };
+  const [urlInput, setUrlInput] = useState("");
   return (
     <>
       <input
@@ -209,7 +214,25 @@ export function VideoPlayer(props: VideoPlayerProps) {
             type="text"
             placeholder="Enter URL"
           />
-          <button onClick={() => {setPlayerState((prevState) => ({...prevState, url: urlInput })); setUrlInput('')}}>
+          <button
+            onClick={() => {
+              setPlayerState((prevState) => ({ ...prevState, url: urlInput }));
+              setUrlInput("");
+              socket.emit("updateVideoUrl", {
+                roomId: room,
+                videoUrl: urlInput,
+              });
+              socket.emit("videoMoment", {
+                roomId: room,
+                videoMoment: 0,
+              });
+              socket.emit("updateVideoMoment", {
+                roomId: room,
+                videoMoment: 0,
+              });
+              (player.current as any).seekTo(parseFloat(String(0)));
+            }}
+          >
             Load
           </button>
         </td>
@@ -228,11 +251,30 @@ export function VideoPlayer(props: VideoPlayerProps) {
         playbackRate={playbackRate}
         volume={volume}
         muted={muted}
-        onReady={() => console.log("onReady")}
-        onStart={() => {console.log("onStart");
-        socket.emit("getVideoMoment", {roomId: room}, (videoMoment: number) => {
-          (player.current as any).seekTo(parseFloat(String(videoMoment)))
-        });
+        onReady={() => {
+          socket.emit(
+            "getVideoState",
+            { roomId: room },
+            (videoState: VideoState) => {
+              setPlayerState((prevState) => ({
+                ...prevState,
+                playing: Boolean(videoState),
+              }));
+            }
+          );
+          socket.emit(
+            "getVideoMoment",
+            { roomId: room },
+            (videoMoment: number) => {
+              (player.current as any).seekTo(parseFloat(String(videoMoment)));
+              setTimeout(() => {
+                videoMomentFlag.current = true;
+              }, 1000);
+            }
+          );
+        }}
+        onStart={() => {
+          console.log("onStart");
         }}
         onPlay={handlePlay}
         // onEnablePIP={this.handleEnablePIP}
@@ -245,7 +287,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
         onError={(e: any) => console.log("onError", e)}
         onProgress={handleProgress}
         onDuration={handleDuration}
-        progressInterval={500}
+        progressInterval={250}
       />
       <td>
         <input
