@@ -1,11 +1,13 @@
-import React, { Dispatch } from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 interface NameFormProps {
-    join: (name: string) => void;
+  setPfpForm: Dispatch<SetStateAction<boolean>>;
+  setName: Dispatch<SetStateAction<string>>;
 }
 export const NameForm = (props: NameFormProps ) => (
    <div>
-     <h1>Enter your name</h1>
+    <h1 className='gradientText animate__animated animate__fadeIn'>Welcome!</h1>
+     <h2 className='gradientText animate__animated animate__fadeIn' style={{animationDelay: '1.2s'}}>Enter your name</h2>
      <Formik
        initialValues={{ name: ''}}
        validate={values => {
@@ -22,18 +24,24 @@ export const NameForm = (props: NameFormProps ) => (
           ) {
             errors.name = 'Too long';
           }
-         return {};
+          if (errors.name) {
+            return errors
+          }
+          return {}
        }}
        onSubmit={(values, { setSubmitting }) => {
-         props.join(values.name)
+         props.setPfpForm(true)
+         props.setName(values.name)
          setSubmitting(false)
        }}
      >
        {({ isSubmitting }) => (
-         <Form>
-           <Field type="text" name="name" />
+         <Form className='animate__animated animate__fadeIn'
+         style={{animationDelay: '1.8s'}}
+         >
+           <Field type="text" name="name" className='nameInput'/>
            <ErrorMessage name="name" component="div" />
-           <button type="submit" disabled={isSubmitting}>
+           <button className="submitForm" type="submit" disabled={isSubmitting}>
              Submit
            </button>
          </Form>
