@@ -1,6 +1,6 @@
 import React, { Dispatch, SetStateAction, useContext, useMemo, useRef, useState } from 'react'
 import { SocketContext } from "../context/Socket";
-import { RoomEntity, UpdateRes } from 'types'
+import { RoomAction, RoomActionRes, RoomEntity, UpdateRes } from 'types'
 interface RoomsListProps {
     room: string;
     setJoinedRoom: Dispatch<SetStateAction<boolean>>;
@@ -14,10 +14,17 @@ export function RoomList(props: RoomsListProps) {
         socket.emit("findAllRooms", (rooms: RoomEntity[]) => {
             setRooms(rooms)
         });
-        socket.on("room", (room: RoomEntity) => {
-          setRooms(actualState => {
-            return [...actualState, room]
-        });
+        socket.on("room", (roomRes: RoomActionRes) => {
+          console.log(roomRes)
+          if (roomRes.roomAction === RoomAction.add) {
+            setRooms(actualState => {
+              return [...actualState, roomRes.room];
+          });
+          } else if (roomRes.roomAction === RoomAction.delete) {
+            setRooms(actualState => {
+              return actualState.filter(e => e.id !== roomRes.room.id);
+            });
+          }
         });
       }, []);
       const createRoom = () => {
@@ -54,14 +61,23 @@ export function RoomList(props: RoomsListProps) {
       }
   return (
     <>
-    <button onClick={createRoom}>Create a room</button>
     <div className='roomList'>
-        {rooms.map(room => (
-            <div className='room' key={room.id}>
-                <p>Room #{room.id}</p>
-                <button onClick={joinRoom} id={room.id}>Join</button>
+    <div className="roomBox">
+            <h3>
+                Rooms
+            </h3>
+            <button onClick={createRoom}>Create a room</button>
+            <div className="list">
+            {rooms.map(room => (
+                <div className='room' key={room.id}>
+                <div className="content">
+                    <h4>Room #{room.id}</h4>
+                    <button onClick={joinRoom} id={room.id}>Join</button>
+                </div>
+                </div>
+              ))}
             </div>
-        ))}
+        </div>
     </div>
     </>
   )
