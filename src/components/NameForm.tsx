@@ -4,7 +4,7 @@ interface NameFormProps {
   setPfpForm: Dispatch<SetStateAction<boolean>>;
   setName: Dispatch<SetStateAction<string>>;
 }
-export const NameForm = (props: NameFormProps ) => (
+export const NameForm = ({setPfpForm, setName}: NameFormProps ) => (
    <div>
     <h1 className='gradientText animate__animated animate__fadeIn'>Welcome!</h1>
      <h2 className='gradientText animate__animated animate__fadeIn' style={{animationDelay: '1.2s'}}>Enter your name</h2>
@@ -30,8 +30,8 @@ export const NameForm = (props: NameFormProps ) => (
           return {}
        }}
        onSubmit={(values, { setSubmitting }) => {
-         props.setPfpForm(true)
-         props.setName(values.name)
+         setPfpForm(true)
+         setName(values.name)
          setSubmitting(false)
        }}
      >
@@ -39,9 +39,9 @@ export const NameForm = (props: NameFormProps ) => (
          <Form className='animate__animated animate__fadeIn'
          style={{animationDelay: '1.8s'}}
          >
-           <Field type="text" name="name" className='nameInput'/>
-           <ErrorMessage name="name" component="div" />
-           <button className="submitForm" type="submit" disabled={isSubmitting}>
+           <Field type='text' name='name' className='nameInput'/>
+           <ErrorMessage name='name' component='div' />
+           <button className='submitForm' type='submit' disabled={isSubmitting}>
              Submit
            </button>
          </Form>
