@@ -78,7 +78,7 @@
 [type="file"] + label.uploadBtn::before {
   color: #fff;
   content: "Upload";
-  font-size: 130%;
+  font-size: 105%;
   height: 100%;
   left: 0;
   line-height: 2.6;

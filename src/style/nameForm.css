@@ -11,6 +11,7 @@
   display: block;
   margin: 0 auto;
   margin-top: 25px;
+  -webkit-text-fill-color: white;
   -webkit-box-align: center;
       -ms-flex-align: center;
           align-items: center;

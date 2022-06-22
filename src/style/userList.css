@@ -1,7 +1,7 @@
 .userBox {
   position: relative;
-  width: 350px;
-  height: 400px;
+  width: 235px;
+  height: 600px;
   background-color: #0093E9;
   background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);
   -webkit-box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
@@ -42,7 +42,7 @@
   -webkit-transition: .5s;
   transition: .5s;
   overflow-y: auto;
-  height: 80%;
+  height: 90%;
 }
 
 .userBox .list .user {
