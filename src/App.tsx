@@ -10,6 +10,7 @@ import { UserList } from './components/UserList';
 import { VideoPlayer } from './components/VideoPlayer';
 import { ProfilePicUpload } from './components/ProfilePicUpload';
 import { SketchCanvas } from './components/SketchCanvas';
+import { UserVideoActionEntity } from './types/user-video.action';
 
 export function App() {
   const socket = useContext(SocketContext)
@@ -18,6 +19,7 @@ export function App() {
   const [name, setName] = useState<string>('')
   const [room, setRoom] = useState<string>('')
   const [pfpForm, setPfpForm] = useState<boolean>(false)
+  const [userVideoAction, setUserVideoAction] = useState<UserVideoActionEntity>()
   const join = () => {
     socket.emit('join', {name}, () => {
         setJoined(true)
@@ -25,12 +27,16 @@ export function App() {
   }
   return (
     <SocketProvider>
-    <div className="App">
-      {room ? <h2>You're in room #{room}</h2> : null}
-      {joinedRoom ? <VideoPlayer room={room} /> : null}
-      {joinedRoom ? <Chat name={name} room={room}/> : null}
+    <div className='App'>
+      {room ? <h2 className='roomLabel'>You&apos;re in room #{room}</h2> : null}
+      {joinedRoom ? 
+      <div className='container'>
+      {joinedRoom ? <UserList room={room} userVideoAction={userVideoAction}/> : null}
+      <VideoPlayer room={room} setUserVideoAction={setUserVideoAction}/>
+      <Chat name={name} room={room}/>
+      </div>
+      : null}
       {joinedRoom ? <SketchCanvas room={room} /> : null}
-      {joinedRoom ? <UserList room={room}/> : null}
       {joined ? <RoomList room={room} setJoinedRoom={setJoinedRoom} setRoom={setRoom} /> : (pfpForm ? <ProfilePicUpload join={join}/> : <NameForm setPfpForm={setPfpForm} setName={setName}/>)}
     </div>
     </SocketProvider>

@@ -1,18 +1,33 @@
 import React, {
   ChangeEvent,
+  Dispatch,
+  SetStateAction,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
-} from "react";
-import ReactPlayer from "react-player/lazy";
-import { SourceProps } from "react-player/base";
-import { findDOMNode } from "react-dom";
-import screenfull from "screenfull";
-import Duration from "./Duration";
-import { SocketContext } from "../context/Socket";
-import { VideoState } from "types";
-interface Player {
+} from 'react';
+import ReactPlayer from 'react-player/lazy';
+import { SourceProps } from 'react-player/base';
+import { findDOMNode } from 'react-dom';
+import screenfull from 'screenfull';
+import Duration from './Duration';
+import { SocketContext } from '../context/Socket';
+import { VideoMomentAction, VideoState, VideoStateAction, VideoUrlAction } from 'types';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faExpand,
+  faPause,
+  faPlay,
+  faVolumeHigh,
+  faVolumeLow,
+  faVolumeOff,
+  faVolumeUp,
+} from '@fortawesome/free-solid-svg-icons';
+import { VideoUpload } from './VideoUpload';
+import { UserVideoAction, UserVideoActionEntity } from 'src/types/user-video.action';
+export interface Player {
   url?: string | string[] | SourceProps[] | MediaStream | undefined;
   pip?: boolean | undefined;
   playing?: boolean | undefined;
@@ -31,10 +46,10 @@ interface Player {
 }
 interface VideoPlayerProps {
   room: string;
+  setUserVideoAction: Dispatch<SetStateAction<UserVideoActionEntity | undefined>>;
 }
 // PLEASE DON'T TELL JAKUB KRÓL ABOUT THE ANY's HERE, the example js code from the react-player package is pretty old that's why I had to skip types for some of the stuff here, forgive me.
-export function VideoPlayer(props: VideoPlayerProps) {
-  const { room } = props;
+export function VideoPlayer({room, setUserVideoAction}: VideoPlayerProps) {
   const socket = useContext(SocketContext);
   const [playerState, setPlayerState] = useState<Player>({
     url: undefined,
@@ -42,7 +57,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
     playing: true,
     controls: false,
     light: false,
-    volume: 0.8,
+    volume: 0.7,
     muted: false,
     played: 0,
     loaded: 0,
@@ -50,19 +65,21 @@ export function VideoPlayer(props: VideoPlayerProps) {
     playbackRate: 1.0,
     loop: false,
   });
+  const player = useRef(null);
   const videoMomentFlag = useRef(false);
-  useMemo(() => {
+  useEffect(() => {
     setPlayerState((prevState) => ({ ...prevState, url: undefined }));
     setPlayerState((actualState) => {
       return { ...actualState, playing: true };
     });
-    socket.on("videoState", (videoState: VideoState) => {
+    socket.on('videoState', ({videoState, user}: VideoStateAction) => {
+      setUserVideoAction({userVideoAction: Number(videoState), user})
       setPlayerState((actualState) => {
         return { ...actualState, playing: Boolean(videoState) };
       });
       if (videoState === VideoState.pause) {
         socket.emit(
-          "getVideoMoment",
+          'getVideoMoment',
           { roomId: room },
           (videoMoment: number) => {
             (player.current as any).seekTo(parseFloat(String(videoMoment)));
@@ -70,15 +87,16 @@ export function VideoPlayer(props: VideoPlayerProps) {
         );
       }
     });
-    socket.on("updateVideoUrl", (videoUrl: string) => {
-      console.log(videoUrl);
+    socket.on('updateVideoUrl', ({videoUrl, user}: VideoUrlAction) => {
+      setUserVideoAction({ userVideoAction: 3, user });
       setPlayerState((prevState) => ({ ...prevState, url: videoUrl }));
     });
-    socket.on("videoMoment", (videoMoment: number) => {
+    socket.emit('getVideoUrl', { roomId: room }, (videoUrl: string) => {
+      setPlayerState((prevState) => ({ ...prevState, url: videoUrl }));
+    });
+    socket.on('videoMoment', ({videoMoment, user}: VideoMomentAction) => {
+      setUserVideoAction({ userVideoAction: 2, user });
       (player.current as any).seekTo(parseFloat(String(videoMoment)));
-    });
-    socket.emit("getVideoUrl", { roomId: room }, (videoUrl: string) => {
-      setPlayerState((prevState) => ({ ...prevState, url: videoUrl }));
     });
   }, [room]);
   const {
@@ -95,7 +113,6 @@ export function VideoPlayer(props: VideoPlayerProps) {
     playbackRate,
     pip,
   } = playerState;
-  const player = useRef(null);
   const load = (
     url: string | string[] | SourceProps[] | MediaStream | undefined
   ) => {
@@ -110,6 +127,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
   };
   const handlePlayPause = () => {
     setPlayerState((actualState) => {
+      socket.emit('videoState', { roomId: room, videoState: !actualState.playing });
       return { ...actualState, playing: !actualState.playing };
     });
   };
@@ -121,17 +139,17 @@ export function VideoPlayer(props: VideoPlayerProps) {
   };
 
   const handlePause = () => {
-    socket.emit("videoState", { roomId: room, videoState: VideoState.pause });
+    // socket.emit('videoState', { roomId: room, videoState: VideoState.pause });
     setPlayerState((actualState) => {
       return { ...actualState, playing: false };
     });
-    socket.emit("getVideoMoment", { roomId: room }, (videoMoment: number) => {
+    socket.emit('getVideoMoment', { roomId: room }, (videoMoment: number) => {
       (player.current as any).seekTo(parseFloat(String(videoMoment)));
     });
   };
 
   const handlePlay = () => {
-    socket.emit("videoState", { roomId: room, videoState: VideoState.play });
+    // socket.emit('videoState', { roomId: room, videoState: VideoState.play });
     setPlayerState((actualState) => {
       return { ...actualState, playing: true };
     });
@@ -150,29 +168,36 @@ export function VideoPlayer(props: VideoPlayerProps) {
   };
 
   const handleSeekMouseUp = (e: any) => {
-    socket.emit("videoMoment", {
-      roomId: room,
-      videoMoment: playerState.played,
-    });
-    socket.emit("updateVideoMoment", {
-      roomId: room,
-      videoMoment: playerState.played,
-    });
-    socket.emit("videoState", { roomId: room, videoState: VideoState.play });
-    setPlayerState((actualState) => {
-      return { ...actualState, seeking: false, playing: true };
-    });
-    (player.current as any).seekTo(parseFloat(e.target.value));
+    if (!(String(playerState.url).includes('http://localhost'))){
+      socket.emit('videoMoment', {
+        roomId: room,
+        videoMoment: playerState.played,
+      });
+      socket.emit('updateVideoMoment', {
+        roomId: room,
+        videoMoment: playerState.played,
+      });
+      socket.emit('videoState', { roomId: room, videoState: VideoState.play });
+      setPlayerState((actualState) => {
+        return { ...actualState, seeking: false, playing: true };
+      });
+      (player.current as any).seekTo(parseFloat(e.target.value));
+    } else {
+      window.alert('Video forwarding is not yet supported on localhost videos');
+      setPlayerState((actualState) => {
+        return { ...actualState, seeking: false, playing: true };
+      });
+    }
   };
 
   const handleProgress = (state: any) => {
-    console.log("progress");
+    console.log('progress');
     if (!playerState.seeking) {
       setPlayerState((actualState) => {
         return { ...actualState, ...state };
       });
       if (videoMomentFlag.current) {
-        socket.emit("updateVideoMoment", {
+        socket.emit('updateVideoMoment', {
           roomId: room,
           videoMoment: playerState.played,
         });
@@ -181,7 +206,19 @@ export function VideoPlayer(props: VideoPlayerProps) {
   };
 
   const handleClickFullscreen = () => {
+    // eslint-disable-next-line react/no-find-dom-node
     screenfull.request(findDOMNode(player.current as any) as any);
+  };
+  const handleClickVolume = () => {
+    if (playerState.volume === 0) {
+      setPlayerState((actualState) => {
+        return { ...actualState, volume: 0.7 };
+      });
+    } else {
+      setPlayerState((actualState) => {
+        return { ...actualState, volume: 0 };
+      });
+    }
   };
   const handleDuration = (duration: any) => {
     setPlayerState((actualState) => {
@@ -191,120 +228,165 @@ export function VideoPlayer(props: VideoPlayerProps) {
   const handleUrlInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setUrlInput(e.currentTarget.value);
   };
-  const [urlInput, setUrlInput] = useState("");
+  const [urlInput, setUrlInput] = useState('');
+  const [soundInput, setSoundInput] = useState(false);
+  const handleSoundInput = (boolean: boolean) => {
+    setSoundInput(boolean);
+  } 
   return (
     <>
-      <input
-        type="range"
-        min={0}
-        max={1}
-        step="any"
-        value={volume}
-        onChange={handleVolumeChange}
-      />
-      <button onClick={handleStop}>Stop</button>
-      <button onClick={handlePlayPause}>{playing ? "Pause" : "Play"}</button>
-      <button onClick={handleClickFullscreen}>Fullscreen</button>
-      <tr>
-        <th>Custom URL</th>
-        <td>
-          <input
-            value={urlInput}
-            onChange={handleUrlInputChange}
-            type="text"
-            placeholder="Enter URL"
-          />
-          <button
-            onClick={() => {
-              setPlayerState((prevState) => ({ ...prevState, url: urlInput }));
-              setUrlInput("");
-              socket.emit("updateVideoUrl", {
-                roomId: room,
-                videoUrl: urlInput,
-              });
-              socket.emit("videoMoment", {
-                roomId: room,
-                videoMoment: 0,
-              });
-              socket.emit("updateVideoMoment", {
-                roomId: room,
-                videoMoment: 0,
-              });
-              (player.current as any).seekTo(parseFloat(String(0)));
+      <div className='playerContainer'>
+        <div>
+          <div className="videoInputContainer">
+            <div className="urlContainer">
+            <span className="gradientText small">Custom URL</span>
+            <div>
+              <input
+                value={urlInput}
+                onChange={handleUrlInputChange}
+                type='text'
+                placeholder='Enter URL'
+                className='input'
+              />
+              <button
+                className='confirmBtn'
+                onClick={() => {
+                  setPlayerState((prevState) => ({
+                    ...prevState,
+                    url: urlInput,
+                  }));
+                  setUrlInput('');
+                  socket.emit('updateVideoUrl', {
+                    roomId: room,
+                    videoUrl: urlInput,
+                  });
+                  socket.emit('videoMoment', {
+                    roomId: room,
+                    videoMoment: 0,
+                  });
+                  socket.emit('updateVideoMoment', {
+                    roomId: room,
+                    videoMoment: 0,
+                  });
+                  (player.current as any).seekTo(parseFloat(String(0)));
+                }}
+              >
+                Load
+              </button>
+              </div>
+            </div>
+            <VideoUpload room={room} setPlayerState={setPlayerState}/>
+          </div>
+          <ReactPlayer
+            ref={player}
+            className='react-player'
+            width={`${640*1.3}px`}
+            height={`${320*1.3}px`}
+            url={url}
+            pip={pip}
+            playing={playing}
+            controls={controls}
+            light={light}
+            loop={loop}
+            playbackRate={playbackRate}
+            volume={volume}
+            muted={muted}
+            onReady={() => {
+              socket.emit(
+                'getVideoState',
+                { roomId: room },
+                (videoState: VideoState) => {
+                  setPlayerState((prevState) => ({
+                    ...prevState,
+                    playing: Boolean(videoState),
+                  }));
+                }
+              );
+              socket.emit(
+                'getVideoMoment',
+                { roomId: room },
+                (videoMoment: number) => {
+                  if (!(String(playerState.url).includes('http://localhost'))) {
+                    (player.current as any).seekTo(
+                      parseFloat(String(videoMoment))
+                    );
+                  }
+                  setTimeout(() => {
+                    videoMomentFlag.current = true;
+                  }, 1000);
+                }
+              );
             }}
-          >
-            Load
-          </button>
-        </td>
-      </tr>
-      <ReactPlayer
-        ref={player}
-        className="react-player"
-        width="640px"
-        height="320px"
-        url={url}
-        pip={pip}
-        playing={playing}
-        controls={controls}
-        light={light}
-        loop={loop}
-        playbackRate={playbackRate}
-        volume={volume}
-        muted={muted}
-        onReady={() => {
-          socket.emit(
-            "getVideoState",
-            { roomId: room },
-            (videoState: VideoState) => {
-              setPlayerState((prevState) => ({
-                ...prevState,
-                playing: Boolean(videoState),
-              }));
-            }
-          );
-          socket.emit(
-            "getVideoMoment",
-            { roomId: room },
-            (videoMoment: number) => {
-              (player.current as any).seekTo(parseFloat(String(videoMoment)));
-              setTimeout(() => {
-                videoMomentFlag.current = true;
-              }, 1000);
-            }
-          );
-        }}
-        onStart={() => {
-          console.log("onStart");
-        }}
-        onPlay={handlePlay}
-        // onEnablePIP={this.handleEnablePIP}
-        // onDisablePIP={this.handleDisablePIP}
-        onPause={handlePause}
-        onBuffer={() => console.log("onBuffer")}
-        // onPlaybackRateChange={this.handleOnPlaybackRateChange}
-        onSeek={(e: any) => console.log("onSeek", e)}
-        // onEnded={this.handleEnded}
-        onError={(e: any) => console.log("onError", e)}
-        onProgress={handleProgress}
-        onDuration={handleDuration}
-        progressInterval={250}
-      />
-      <td>
-        <input
-          type="range"
-          min={0}
-          max={0.999999}
-          step="any"
-          value={played}
-          onMouseDown={handleSeekMouseDown}
-          onChange={handleSeekChange}
-          onMouseUp={handleSeekMouseUp}
-        />
-      </td>
-      <span>elapsed</span>
-      <td>
-        <Duration seconds={duration && played ? duration * played : null} />
-      </td>
+            onStart={() => {
+              console.log('onStart');
+            }}
+            onPlay={handlePlay}
+            // onEnablePIP={this.handleEnablePIP}
+            // onDisablePIP={this.handleDisablePIP}
+            onPause={handlePause}
+            onBuffer={() => console.log('onBuffer')}
+            // onPlaybackRateChange={this.handleOnPlaybackRateChange}
+            onSeek={(e: any) => console.log('onSeek', e)}
+            // onEnded={this.handleEnded}
+            onError={(e: any) => console.log('onError', e)}
+            onProgress={handleProgress}
+            onDuration={handleDuration}
+            progressInterval={250}
+          />
+          <div className='timeline'>
+            <Duration seconds={duration && played ? duration * played : null} />
+          <input
+            type='range'
+            min={0}
+            max={0.999999}
+            step='any'
+            value={played}
+            onMouseDown={handleSeekMouseDown}
+            onChange={handleSeekChange}
+            onMouseUp={handleSeekMouseUp}
+          />
+          <aside>
+          <input
+            type='range'
+            min={0}
+            max={1}
+            step='any'
+            className='volume'
+            value={volume}
+            onChange={handleVolumeChange}
+            onMouseOver={() => handleSoundInput(true)}
+            onMouseOut={() => handleSoundInput(false)}
+            style={{display: soundInput ? 'block' : 'none'}}
+          />
+          <div>
+            {/* <button onClick={handleStop}></button> */}
+            <button onClick={handleClickVolume}>
+              {(() => {
+                if (playerState.volume) {
+                  if (playerState.volume >= 0.275) {
+                    return <FontAwesomeIcon icon={faVolumeHigh} onMouseOver={() => handleSoundInput(true)} onMouseOut={() => handleSoundInput(false)}/>;
+                  } else {
+                    return <FontAwesomeIcon icon={faVolumeLow} onMouseOver={() => handleSoundInput(true)} onMouseOut={() => handleSoundInput(false)}/>;
+                  }
+                }
+                return <FontAwesomeIcon icon={faVolumeOff} onMouseOver={() => handleSoundInput(true)} onMouseOut={() => handleSoundInput(false)}/>;
+              })()}
+            </button>
+            <button onClick={handlePlayPause}>
+              {playing ? (
+                <FontAwesomeIcon icon={faPause} />
+              ) : (
+                <FontAwesomeIcon icon={faPlay} />
+              )}
+            </button>
+            <button onClick={handleClickFullscreen}>
+              <FontAwesomeIcon icon={faExpand} />
+            </button>
+          </div>
+        </aside>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
