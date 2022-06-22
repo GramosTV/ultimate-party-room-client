@@ -1,67 +1,90 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { faEraser, faImage, faPen, faTrashCan } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import {
   CanvasPath,
   ExportImageType,
   ReactSketchCanvas,
   ReactSketchCanvasProps,
   ReactSketchCanvasRef,
-} from 'react-sketch-canvas';
-import { SocketContext } from "../context/Socket";
+} from 'react-sketch-canvas'
+import { SocketContext } from '../context/Socket'
 
-type Handlers = [string, () => void, string][];
+type Handlers = [string, () => void, string][]
 
 interface InputFieldProps {
-  fieldName: keyof ReactSketchCanvasProps;
-  type?: string;
-  canvasProps: Partial<ReactSketchCanvasProps>;
-  setCanvasProps: React.Dispatch<
-    React.SetStateAction<Partial<ReactSketchCanvasProps>>
-  >;
+  fieldName: keyof ReactSketchCanvasProps
+  type?: string
+  canvasProps: Partial<ReactSketchCanvasProps>
+  setCanvasProps: React.Dispatch<React.SetStateAction<Partial<ReactSketchCanvasProps>>>
+  room: string
 }
 
-function InputField({
-  fieldName,
-  type = 'text',
-  canvasProps,
-  setCanvasProps,
-}: InputFieldProps) {
-  const handleChange = ({
-    target,
-  }: React.ChangeEvent<HTMLInputElement>): void => {
+function InputField({ fieldName, type = 'text', canvasProps, setCanvasProps, room }: InputFieldProps) {
+  let value; 
+  const socket = useContext(SocketContext)
+  const handleChange = ({ target }: React.ChangeEvent<HTMLInputElement>): void => {
+    if (fieldName === 'backgroundImage') {
+      socket.emit('updateCanvasBgc', {
+        roomId: room,
+        canvasBgc: target.value,
+      });
+    }
+    
+    if (fieldName === 'strokeWidth') {
+      setStrokeWidth(target.value)
+      value = strokeWidth
+    } else if (fieldName === 'eraserWidth') {
+      setEraserWidth(target.value)
+      value = eraserWidth
+    } else {
+      value = canvasProps[fieldName] as string
+    }
+
+
     setCanvasProps((prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
       ...prevCanvasProps,
-      [fieldName]: target.value,
-    }));
-  };
-
-  const id = 'validation' + fieldName;
-
+      [fieldName]: type === 'range' ? Number(target.value) : target.value,
+    }))
+  }
+  const [strokeWidth, setStrokeWidth] = useState('0')
+  const [eraserWidth, setEraserWidth] = useState('0')
+  const id = 'validation' + fieldName
+  
   return (
-    <div className="p-2 col-10">
-      <label htmlFor={id} className="form-label">
+    <div className='p-2 col-10 canvasProps'>
+      <label htmlFor={id} className='form-label'>
         {fieldName}
       </label>
       <input
         name={fieldName}
         type={type}
-        className="form-control"
+        className='form-control'
         id={id}
-        value={canvasProps[fieldName] as string}
+        value={value}
         onChange={handleChange}
         min={1}
         max={30}
+        placeholder={fieldName === 'backgroundImage' ? 'Enter image url' : ''}
       />
     </div>
-  );
+  )
 }
 interface SketchCanvasProps {
-    room: string;
+  room: string
 }
-export function SketchCanvas(props: SketchCanvasProps) {
-    const socket = useContext(SocketContext);
-  const [canvasProps, setCanvasProps] = React.useState<
-    Partial<ReactSketchCanvasProps>
-  >({
+export function SketchCanvas({room}: SketchCanvasProps) {
+  const socket = useContext(SocketContext);
+  const canvasRef = React.createRef<ReactSketchCanvasRef>()
+  const clearHandler = () => {
+    const clearCanvas = canvasRef.current?.clearCanvas
+
+    if (clearCanvas) {
+      socket.emit('canvasClean', { roomId: room })
+      clearCanvas()
+    }
+  }
+  const [canvasProps, setCanvasProps] = React.useState<Partial<ReactSketchCanvasProps>>({
     className: 'react-sketch-canvas',
     width: '100%',
     height: '500px',
@@ -77,645 +100,309 @@ export function SketchCanvas(props: SketchCanvasProps) {
     exportWithBackgroundImage: true,
     withTimestamp: true,
     allowOnlyPointerType: 'all',
-  });
+  })
+  useEffect(() => {
+    clearHandler()
+  }, [room])
+  useMemo(() => {
+    setCanvasProps({
+      className: 'react-sketch-canvas',
+      width: '735px',
+      height: '500px',
+      backgroundImage:
+        'https://upload.wikimedia.org/wikipedia/commons/7/70/Graph_paper_scan_1600x1000_%286509259561%29.jpg',
+      preserveBackgroundImageAspectRatio: 'none',
+      strokeWidth: 4,
+      eraserWidth: 5,
+      strokeColor: '#000000',
+      canvasColor: '#FFFFFF',
+      style: { borderRight: '1px solid #CCC' },
+      svgStyle: {},
+      exportWithBackgroundImage: true,
+      withTimestamp: true,
+      allowOnlyPointerType: 'all',
+    })
+    socket.on('updateCanvasBgc', (canvasBgc: string) => {
+      setCanvasProps((prevState) => ({ ...prevState, backgroundImage: canvasBgc }))
+    })
+    socket.emit('getCanvasBgc', { roomId: room }, (canvasBgc: string) => {
+      setCanvasProps((prevState) => ({ ...prevState, backgroundImage: canvasBgc }))
+    })
+  }, [room])
+  
 
-  const inputProps: Array<[keyof ReactSketchCanvasProps, 'text' | 'number']> = [
-    ['className', 'text'],
-    ['width', 'text'],
-    ['height', 'text'],
+  const inputProps: Array<[keyof ReactSketchCanvasProps, 'text' | 'number' | 'range']> = [
+    // ['className', 'text'],
+    // ['width', 'text'],
+    // ['height', 'text'],
     ['backgroundImage', 'text'],
-    ['preserveBackgroundImageAspectRatio', 'text'],
-    ['strokeWidth', 'number'],
-    ['eraserWidth', 'number'],
-  ];
+    // ['preserveBackgroundImageAspectRatio', 'text'],
+    ['strokeWidth', 'range'],
+    ['eraserWidth', 'range'],
+  ]
 
-  const canvasRef = React.createRef<ReactSketchCanvasRef>();
+  
   const [getCanvasFlag, setGetCanvasFlag] = useState(true)
   useMemo(() => {
     if (getCanvasFlag) {
-    socket.emit("getCanvas", {roomId: props.room}, (canvas: any) => {
-      if (canvas && canvasRef.current) {
-        const pathsToUpdate = JSON.parse(canvas);
-        canvasRef.current?.loadPaths(pathsToUpdate);
-        setGetCanvasFlag(false);
-      } else if (canvasRef.current) {
-        console.log("Canvas is empty")
-        setGetCanvasFlag(false);
-      }
-    });
-  }
-  }, [canvasRef]);
-  useEffect(() => {
-    socket.on("canvasChange", (canvasAction: CanvasPath) => {
-      const pathsToUpdate = JSON.parse(JSON.stringify(canvasAction));
-      canvasRef.current?.loadPaths(pathsToUpdate);
-    });
-    socket.on("canvasClean", () => {
-    const clearCanvas = canvasRef.current?.clearCanvas;
-    if (clearCanvas) {
-      clearCanvas();
+      socket.emit('getCanvas', { roomId: room }, (canvas: any) => {
+        if (canvas && canvasRef.current) {
+          const pathsToUpdate = JSON.parse(canvas)
+          canvasRef.current?.loadPaths(pathsToUpdate)
+          setGetCanvasFlag(false)
+        } else if (canvasRef.current) {
+          console.log('Canvas is empty')
+          setGetCanvasFlag(false)
+        }
+      })
     }
-    });
-  }, [canvasRef]);
-  
-  const [dataURI, setDataURI] = React.useState<string>('');
-  const [svg, setSVG] = React.useState<string>('');
-  const [paths, setPaths] = React.useState<CanvasPath[]>([]);
+  }, [canvasRef])
+  useEffect(() => {
+    socket.on('canvasChange', (canvasAction: CanvasPath) => {
+      const pathsToUpdate = JSON.parse(JSON.stringify(canvasAction))
+      canvasRef.current?.loadPaths(pathsToUpdate)
+    })
+    socket.on('canvasClean', () => {
+      const clearCanvas = canvasRef.current?.clearCanvas
+      if (clearCanvas) {
+        clearCanvas()
+      }
+    })
+  }, [canvasRef])
+
+  const [dataURI, setDataURI] = React.useState<string>('')
+  const [svg, setSVG] = React.useState<string>('')
+  const [paths, setPaths] = React.useState<CanvasPath[]>([])
   const [lastStroke, setLastStroke] = React.useState<{
-    stroke: CanvasPath | null;
-    isEraser: boolean | null;
-  }>({ stroke: null, isEraser: null });
-  const [pathsToLoad, setPathsToLoad] = React.useState<string>('');
-  const [sketchingTime, setSketchingTime] = React.useState<number>(0);
-  const [exportImageType, setexportImageType] =
-    React.useState<ExportImageType>('png');
+    stroke: CanvasPath | null
+    isEraser: boolean | null
+  }>({ stroke: null, isEraser: null })
+  const [pathsToLoad, setPathsToLoad] = React.useState<string>('')
+  const [exportImageType, setexportImageType] = React.useState<ExportImageType>('png')
 
   const imageExportHandler = async () => {
-    const exportImage = canvasRef.current?.exportImage;
+    const exportImage = canvasRef.current?.exportImage
 
     if (exportImage) {
-      const exportedDataURI = await exportImage(exportImageType);
-      setDataURI(exportedDataURI);
+      const exportedDataURI = await exportImage(exportImageType)
+      setDataURI(exportedDataURI)
     }
-  };
+  }
 
   const svgExportHandler = async () => {
-    const exportSvg = canvasRef.current?.exportSvg;
+    const exportSvg = canvasRef.current?.exportSvg
 
     if (exportSvg) {
-      const exportedDataURI = await exportSvg();
-      setSVG(exportedDataURI);
+      const exportedDataURI = await exportSvg()
+      setSVG(exportedDataURI)
     }
-  };
-
-  const getSketchingTimeHandler = async () => {
-    const getSketchingTime = canvasRef.current?.getSketchingTime;
-
-    try {
-      if (getSketchingTime) {
-        const currentSketchingTime = await getSketchingTime();
-        setSketchingTime(currentSketchingTime);
-      }
-    } catch {
-      setSketchingTime(0);
-      console.error('With timestamp is disabled');
-    }
-  };
-
+  }
+  const [eraseState, setEraseState] = useState(false)
   const penHandler = () => {
-    const eraseMode = canvasRef.current?.eraseMode;
+    const eraseMode = canvasRef.current?.eraseMode
 
     if (eraseMode) {
-      eraseMode(false);
+      eraseMode(false)
+      setEraseState(false)
     }
-  };
+  }
 
   const eraserHandler = () => {
-    const eraseMode = canvasRef.current?.eraseMode;
+    const eraseMode = canvasRef.current?.eraseMode
 
     if (eraseMode) {
-      eraseMode(true);
+      eraseMode(true)
+      setEraseState(true)
     }
-  };
+  }
 
-  const undoHandler = () => {
-    const undo = canvasRef.current?.undo;
+  
 
-    if (undo) {
-      undo();
-    }
-  };
-
-  const redoHandler = () => {
-    const redo = canvasRef.current?.redo;
-
-    if (redo) {
-      redo();
-    }
-  };
-
-  const clearHandler = () => {
-    const clearCanvas = canvasRef.current?.clearCanvas;
-
-    if (clearCanvas) {
-    socket.emit("canvasClean", {roomId: props.room});
-    clearCanvas();
-    }
-  };
-
-  const resetCanvasHandler = () => {
-    const resetCanvas = canvasRef.current?.resetCanvas;
-
-    if (resetCanvas) {
-      resetCanvas();
-    }
-  };
-
-  const createButton = (
-    label: string,
-    handler: () => void,
-    themeColor: string
-  ) => (
+  const createButton = (label: string, handler: () => void, themeColor: string) => ( 
     <button
       key={label}
-      className={`btn btn-${themeColor} btn-block`}
-      type="button"
+      className={`btn btn-${themeColor} btn-block canvasBtn`}
+      type='button'
       onClick={handler}
     >
-      {label}
+      {(() => {
+      if (label === 'Eraser') {
+        return <FontAwesomeIcon icon={faEraser} className={
+          eraseState ? 'active' : ''}/>
+      } else if (label === 'Pen') {
+        return <FontAwesomeIcon icon={faPen} className={!eraseState ? 'active' : ''}/>
+      } else if (label === 'Clear All') {
+        return <FontAwesomeIcon icon={faTrashCan}/>
+      } else if (label === 'Export Image') {
+        return <FontAwesomeIcon icon={faImage}/>
+      } else if (label === 'Export SVG') {
+        return <div><FontAwesomeIcon icon={faImage}/> SVG</div> 
+      }
+      return label
+      })()}
     </button>
-  );
-
+  )
   const buttonsWithHandlers: Handlers = [
-    ['Undo', undoHandler, 'primary'],
-    ['Redo', redoHandler, 'primary'],
     ['Clear All', clearHandler, 'primary'],
-    ['Reset All', resetCanvasHandler, 'primary'],
     ['Pen', penHandler, 'secondary'],
     ['Eraser', eraserHandler, 'secondary'],
     ['Export Image', imageExportHandler, 'success'],
     ['Export SVG', svgExportHandler, 'success'],
-    ['Get Sketching time', getSketchingTimeHandler, 'success'],
-  ];
+  ]
 
   const onChange = (updatedPaths: CanvasPath[]): void => {
-    setPaths(updatedPaths);
-  };
+    setPaths(updatedPaths)
+  }
 
   return (
-    <main className="container-fluid p-5">
-      <header className="border-bottom p-3 d-flex align-items-end">
-        <img
-          className="logo"
-          src="https://i.imgur.com/ajs39FC.png"
-          alt="React Sketch Canvas"
-        />
-        <h1 className="title">ReactSketchCanvas</h1>
-      </header>
-      <div className="row">
-        <aside className="col-3 border-right">
-          <header className="my-5">
-            <h3>Props</h3>
-          </header>
-          <form>
-            {inputProps.map(([fieldName, type]) => (
-              <InputField
-                key={fieldName}
-                fieldName={fieldName}
-                type={type}
-                canvasProps={canvasProps}
-                setCanvasProps={setCanvasProps}
-              />
-            ))}
-            <div className="p-2 col-10 d-flex ">
+    <main className='container-fluid p-5'>
+      <h3 className='gradientText'>Canvas</h3>
+      <div className='row'>
+        <aside className='col-3 border-right'>
+          {/* <header className='my-5'> */}
+            {/* <h3>Props</h3> */}
+          {/* </header> */}
+          <form className='canvasPropsForm'>
+            {inputProps.map(([fieldName, type]) => {
+              return (
+                <InputField
+                  key={fieldName}
+                  fieldName={fieldName}
+                  type={type}
+                  canvasProps={canvasProps}
+                  setCanvasProps={setCanvasProps}
+                  room={room}
+                />
+              )
+            })}
+            <div className='p-2 col-10 d-flex '>
               <div>
-                <label htmlFor="strokeColorInput" className="form-label">
+                <label htmlFor='strokeColorInput' className='form-label'>
                   strokeColor
                 </label>
                 <input
-                  type="color"
-                  name="strokeColor"
-                  className="form-control form-control-color"
-                  id="strokeColorInput"
+                  type='color'
+                  name='strokeColor'
+                  className='form-control form-control-color'
+                  id='strokeColorInput'
                   value={canvasProps.strokeColor}
-                  title="Choose stroke color"
+                  title='Choose stroke color'
                   onChange={(e) => {
-                    setCanvasProps(
-                      (prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
-                        ...prevCanvasProps,
-                        strokeColor: e.target.value,
-                      })
-                    );
+                    setCanvasProps((prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
+                      ...prevCanvasProps,
+                      strokeColor: e.target.value,
+                    }))
                   }}
                 ></input>
               </div>
-              <div className="mx-4">
-                <label htmlFor="canvasColorInput" className="form-label">
+              {/* <div className='mx-4'>
+                <label htmlFor='canvasColorInput' className='form-label'>
                   canvasColor
                 </label>
                 <input
-                  name="canvasColor"
-                  type="color"
-                  className="form-control form-control-color"
-                  id="canvasColorInput"
+                  name='canvasColor'
+                  type='color'
+                  className='form-control form-control-color'
+                  id='canvasColorInput'
                   value={canvasProps.canvasColor}
-                  title="Choose stroke color"
+                  title='Choose stroke color'
                   onChange={(e) => {
-                    setCanvasProps(
-                      (prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
-                        ...prevCanvasProps,
-                        backgroundImage: '',
-                        canvasColor: e.target.value,
-                      })
-                    );
+                    setCanvasProps((prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
+                      ...prevCanvasProps,
+                      backgroundImage: '',
+                      canvasColor: e.target.value,
+                    }))
                   }}
                 ></input>
-              </div>
+              </div> */}
             </div>
-            <div className="p-2 col-10">
-              <div className="form-check form-switch">
+            <div className='p-2 col-10'>
+              <div className='form-check form-switch'>
                 <input
-                  className="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  id="switchExportWithBackgroundImage"
+                  className='form-check-input'
+                  type='checkbox'
+                  role='switch'
+                  id='switchExportWithBackgroundImage'
                   checked={canvasProps.exportWithBackgroundImage}
                   onChange={(e) => {
-                    setCanvasProps(
-                      (prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
-                        ...prevCanvasProps,
-                        exportWithBackgroundImage: e.target.checked,
-                      })
-                    );
+                    setCanvasProps((prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
+                      ...prevCanvasProps,
+                      exportWithBackgroundImage: e.target.checked,
+                    }))
                   }}
                 />
-                <label
-                  className="form-check-label"
-                  htmlFor="switchExportWithBackgroundImage"
-                >
+                <label className='form-check-label' htmlFor='switchExportWithBackgroundImage'>
                   exportWithBackgroundImage
                 </label>
               </div>
             </div>
-            <div className="p-2 col-10">
-              <div className="form-check form-switch">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  id="switchWithTimestamp"
-                  checked={canvasProps.withTimestamp}
-                  onChange={(e) => {
-                    setCanvasProps(
-                      (prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
-                        ...prevCanvasProps,
-                        withTimestamp: e.target.checked,
-                      })
-                    );
-                  }}
-                />
-                <label
-                  className="form-check-label"
-                  htmlFor="switchWithTimestamp"
-                >
-                  withTimestamp
-                </label>
-              </div>
-            </div>
-            <div className="p-2">
-              <label className="form-check-label" htmlFor="exportImageType">
-                exportImageType
-              </label>
-              <div id="exportImageType" className="pt-2">
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="exportImageType"
-                    id="exportImageTypePng"
-                    value="png"
-                    checked={exportImageType === 'png'}
-                    onChange={() => {
-                      setexportImageType('png');
-                    }}
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor="exportImageTypePng"
-                  >
-                    png
-                  </label>
-                </div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="exportImageType"
-                    id="exportImageTypeJPEG"
-                    value="touch"
-                    checked={exportImageType === 'jpeg'}
-                    onChange={() => {
-                      setexportImageType('jpeg');
-                    }}
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor="exportImageTypeJPEG"
-                  >
-                    jpeg
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className="p-2">
-              <label
-                className="form-check-label"
-                htmlFor="allowOnlyPointerType"
-              >
-                allowOnlyPointerType
-              </label>
-              <div id="allowOnlyPointerType" className="p-2">
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="allowPointer"
-                    id="allowPointerAll"
-                    value="all"
-                    checked={canvasProps.allowOnlyPointerType === 'all'}
-                    onChange={() => {
-                      setCanvasProps(
-                        (prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
-                          ...prevCanvasProps,
-                          allowOnlyPointerType: 'all',
-                        })
-                      );
-                    }}
-                  />
-                  <label className="form-check-label" htmlFor="allowPointerAll">
-                    all
-                  </label>
-                </div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="allowPointer"
-                    id="allowPointerTouch"
-                    value="touch"
-                    checked={canvasProps.allowOnlyPointerType === 'touch'}
-                    onChange={() => {
-                      setCanvasProps(
-                        (prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
-                          ...prevCanvasProps,
-                          allowOnlyPointerType: 'touch',
-                        })
-                      );
-                    }}
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor="allowPointerTouch"
-                  >
-                    touch
-                  </label>
-                </div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="allowPointer"
-                    id="allowPointerMouse"
-                    value="mouse"
-                    checked={canvasProps.allowOnlyPointerType === 'mouse'}
-                    onChange={() => {
-                      setCanvasProps(
-                        (prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
-                          ...prevCanvasProps,
-                          allowOnlyPointerType: 'mouse',
-                        })
-                      );
-                    }}
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor="allowPointerMouse"
-                  >
-                    mouse
-                  </label>
-                </div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="allowPointer"
-                    id="allowPointerPen"
-                    value="pen"
-                    checked={canvasProps.allowOnlyPointerType === 'pen'}
-                    onChange={() => {
-                      setCanvasProps(
-                        (prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
-                          ...prevCanvasProps,
-                          allowOnlyPointerType: 'pen',
-                        })
-                      );
-                    }}
-                  />
-                  <label className="form-check-label" htmlFor="allowPointerPen">
-                    pen
-                  </label>
-                </div>
-              </div>
-              <div className="p-2 col-10">
-                <label htmlFor="style" className="form-label">
-                  style
-                </label>
-                <textarea
-                  id="style"
-                  className="dataURICode col-12"
-                  onChange={(event) => {
-                    try {
-                      const style = JSON.parse(event.target.value);
-                      setCanvasProps(
-                        (prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
-                          ...prevCanvasProps,
-                          style: style,
-                        })
-                      );
-                    } catch {
-                      return;
-                    }
-                  }}
-                  rows={5}
-                  defaultValue={JSON.stringify(canvasProps.style, null, 2)}
-                />
-              </div>
-              <div className="p-2 col-10">
-                <label htmlFor="svg-style" className="form-label">
-                  SVG style
-                </label>
-                <textarea
-                  id="svg-style"
-                  className="dataURICode col-12"
-                  onChange={(event) => {
-                    try {
-                      const svgStyle = JSON.parse(event.target.value);
-                      setCanvasProps(
-                        (prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
-                          ...prevCanvasProps,
-                          svgStyle: svgStyle,
-                        })
-                      );
-                    } catch {
-                      return;
-                    }
-                  }}
-                  rows={5}
-                  defaultValue={JSON.stringify(canvasProps.svgStyle, null, 2)}
-                />
-              </div>
-              <div className="p-2 col-10">
-                <label htmlFor="pathsToLoad" className="form-label">
-                  Paths to load
-                </label>
-                <textarea
-                  name="pathsToLoad"
-                  id="pathsToLoad"
-                  className="dataURICode col-12"
-                  rows={5}
-                  value={pathsToLoad}
-                  onChange={(e) => {
-                    setPathsToLoad(e.target.value);
-                  }}
-                />
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => {
-                    const pathsToUpdate = JSON.parse(pathsToLoad);
-
-                    canvasRef.current?.loadPaths(pathsToUpdate);
-                  }}
-                >
-                  Load Paths
-                </button>
-              </div>
-            </div>
           </form>
         </aside>
-        <section className="col-9">
-          <header className="my-5">
-            <h3>Canvas</h3>
+        <section className='col-9'>
+          <header className='my-5'>
           </header>
-          <section className="row no-gutters canvas-area m-0 p-0">
-            <div className="col-9 canvas p-0">
+          <section className='row no-gutters canvas-area m-0 p-0'>
+            <div className='col-9 canvas p-0'>
               <ReactSketchCanvas
                 ref={canvasRef}
                 onChange={onChange}
                 onStroke={(stroke, isEraser) => {
-                socket.emit("canvasChange", {roomId: props.room, canvasAction: stroke});
-                console.log('emited')
+                  socket.emit('canvasChange', { roomId: room, canvasAction: stroke })
+                  console.log('emited')
                   setLastStroke({ stroke, isEraser })
                 }}
                 {...canvasProps}
               />
             </div>
-            <div className="col-3 panel">
-              <div className="d-grid gap-2">
+            <div className='col-3 panel'>
+              <div className='d-grid gap-2'>
                 {buttonsWithHandlers.map(([label, handler, themeColor]) =>
-                  createButton(label, handler, themeColor)
+                  createButton(label, handler, themeColor),
                 )}
               </div>
             </div>
           </section>
-
-          <section className="row image-export mt-5 p-3 justify-content-center align-items-start">
-            <div className="col-5 row form-group">
-              <div className="p-2">
-                <label className="col-12" htmlFor="paths">
-                  Paths
-                </label>
-                <textarea
-                  id="paths"
-                  className="dataURICode col-12"
-                  readOnly
-                  rows={10}
-                  value={
-                    paths.length !== 0
-                      ? JSON.stringify(paths, null, 2)
-                      : 'Sketch to get paths'
-                  }
-                />
-              </div>
-              <div className="p-2">
-                <label className="col-12" htmlFor="last-stroke">
-                  Last stroke
-                  {lastStroke.isEraser !== null &&
-                    ':' + (lastStroke.isEraser ? 'Eraser' : 'Pen')}
-                </label>
-                <textarea
-                  id="last-stroke"
-                  className="dataURICode col-12"
-                  readOnly
-                  rows={10}
-                  value={
-                    lastStroke.stroke !== null
-                      ? JSON.stringify(lastStroke.stroke, null, 2)
-                      : 'Sketch to get the last stroke'
-                  }
-                />
-              </div>
-            </div>
-            <div className="col-5 offset-2">
-              <label className="col-12" htmlFor="dataURI">
-                Sketching time
-              </label>
-              <div id="sketchingTime" className="sketchingTime">
-                {(sketchingTime / 1000).toFixed(3)} sec
-              </div>
-            </div>
-          </section>
-
-          <section className="row image-export p-3 justify-content-center align-items-start">
-            <div className="col-5 row form-group">
-              <label className="col-12" htmlFor="imageDataURI">
-                Exported Data URI for imagetype
-              </label>
-              <textarea
-                id="imageDataURI"
-                className="dataURICode col-12"
-                readOnly
-                rows={10}
-                value={dataURI || 'Click on export image'}
-              />
-            </div>
-            <div className="col-5 offset-2">
-              <p>Exported image</p>
-              <img
-                className="exported-image"
-                id="exported-image"
-                src={
-                  dataURI ||
-                  'https://via.placeholder.com/500x250/000000/FFFFFF/?text=Click on export image'
-                }
-                alt="exported"
-              />
-            </div>
-          </section>
-
-          <section className="row image-export p-3 justify-content-center align-items-start">
-            <div className="col-5 row form-group">
-              <label className="col-12" htmlFor="svgCode">
-                Exported SVG code
-              </label>
-              <textarea
-                id="svgCode"
-                className="dataURICode col-12"
-                readOnly
-                rows={10}
-                value={svg || 'Click on export svg'}
-              />
-            </div>
-            <div className="col-5 offset-2">
-              <p>Exported SVG</p>
-              {svg ? (
-                <span
-                  id="exported-svg"
-                  className="exported-image"
-                  dangerouslySetInnerHTML={{ __html: svg }}
-                />
-              ) : (
-                <img
-                  src="https://via.placeholder.com/500x250/000000/FFFFFF/?text=Click on export SVG"
-                  alt="Svg Export"
-                  id="exported-svg"
-                  className="exported-image"
-                />
-              )}
-            </div>
-          </section>
+         
         </section>
+        <div className='exports'>
+
+          
+<section className='row image-export p-3 justify-content-center align-items-start'>
+  <div className='col-5 offset-2'>
+    <p>Exported image</p>
+    <img
+      className='exported-image'
+      id='exported-image'
+      src={
+        dataURI ||
+        'https://via.placeholder.com/500x250/000000/FFFFFF/?text=Click on export image'
+      }
+      alt='exported'
+    />
+  </div>
+</section>
+
+<section className='row image-export p-3 justify-content-center align-items-start'>
+  <div className='col-5 offset-2'>
+    <p>Exported SVG</p>
+    {svg ? (
+      <span
+        id='exported-svg'
+        className='exported-image'
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    ) : (
+      <img
+        src='https://via.placeholder.com/500x250/000000/FFFFFF/?text=Click on export SVG'
+        alt='Svg Export'
+        id='exported-svg'
+        className='exported-image'
+      />
+    )}
+  </div>
+</section>
+</div>
       </div>
     </main>
-  );
+  )
 }
