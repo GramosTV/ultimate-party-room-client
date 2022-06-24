@@ -35,7 +35,7 @@ export function VideoUpload({room, setPlayerState}: VideoUploadProps) {
         body: data,
       })
       const response = (await res.json())?.videoUrl
-      socket.emit('updateVideoUrl', {roomId: room, videoUrl: response}, (videoUrl: string) => {
+      socket.emit('updateVideoUrl', { videoUrl: response}, (videoUrl: string) => {
         setPlayerState((prevState) => ({
             ...prevState,
             url: videoUrl,

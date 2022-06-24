@@ -4,18 +4,17 @@ import { SocketContext } from '../context/Socket';
 import { MessageEntity } from 'types'
 interface MessageInputProps {
     name: string;
-    room: string;
 }
-export const MessageInput = ({name, room}: MessageInputProps) => {
+export const MessageInput = ({name}: MessageInputProps) => {
   const socket = useContext(SocketContext);
   const sendMessage = (text: string) => {
-    socket.emit('createMessage', { name: name, text, roomId: room });
+    socket.emit('createMessage', { name: name, text });
   };
   let typingTimeout;
   const emitTyping = () => {
-    socket.emit('typing', { isTyping: true, roomId: room });
+    socket.emit('typing', { isTyping: true });
     typingTimeout = setTimeout(() => {
-      socket.emit('typing', { isTyping: false, roomId: room });
+      socket.emit('typing', { isTyping: false });
     }, 2000);
   };
   const handleChange = (e: React.ChangeEvent<any>) => {

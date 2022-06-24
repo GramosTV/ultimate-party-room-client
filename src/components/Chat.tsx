@@ -13,7 +13,7 @@ export function Chat(props: ChatProps) {
   const [userIsTyping, setUserIsTyping] = useState<string>('');
   useEffect(() => {
     setMessages([]);
-    socket.emit('findAllMessages', {roomId: room}, (response: MessageEntity[]) => {
+    socket.emit('findAllMessages', (response: MessageEntity[]) => {
       setMessages(response);
     });
   }, [room])
@@ -55,7 +55,7 @@ export function Chat(props: ChatProps) {
       })}
     </div>
     {userIsTyping ? <p>{userIsTyping}</p> : null}
-      <MessageInput name={name} room={room}/>
+      <MessageInput name={name}/>
     </div>
   );
 }

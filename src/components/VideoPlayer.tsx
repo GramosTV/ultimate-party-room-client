@@ -26,7 +26,7 @@ import {
   faVolumeUp,
 } from '@fortawesome/free-solid-svg-icons';
 import { VideoUpload } from './VideoUpload';
-import { UserVideoAction, UserVideoActionEntity } from 'src/types/user-video.action';
+import { UserVideoActionEntity } from 'src/types/user-video.action';
 export interface Player {
   url?: string | string[] | SourceProps[] | MediaStream | undefined;
   pip?: boolean | undefined;
@@ -169,6 +169,9 @@ export function VideoPlayer({room, setUserVideoAction}: VideoPlayerProps) {
 
   const handleSeekMouseUp = (e: any) => {
     if (!(String(playerState.url).includes('http://localhost'))){
+      setPlayerState((actualState) => {
+        return { ...actualState, seeking: false, playing: true };
+      });
       socket.emit('videoMoment', {
         roomId: room,
         videoMoment: playerState.played,
@@ -176,10 +179,6 @@ export function VideoPlayer({room, setUserVideoAction}: VideoPlayerProps) {
       socket.emit('updateVideoMoment', {
         roomId: room,
         videoMoment: playerState.played,
-      });
-      socket.emit('videoState', { roomId: room, videoState: VideoState.play });
-      setPlayerState((actualState) => {
-        return { ...actualState, seeking: false, playing: true };
       });
       (player.current as any).seekTo(parseFloat(e.target.value));
     } else {
@@ -263,6 +262,7 @@ export function VideoPlayer({room, setUserVideoAction}: VideoPlayerProps) {
                   socket.emit('videoMoment', {
                     roomId: room,
                     videoMoment: 0,
+                    hidden: true,
                   });
                   socket.emit('updateVideoMoment', {
                     roomId: room,

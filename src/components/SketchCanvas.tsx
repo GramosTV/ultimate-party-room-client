@@ -17,16 +17,14 @@ interface InputFieldProps {
   type?: string
   canvasProps: Partial<ReactSketchCanvasProps>
   setCanvasProps: React.Dispatch<React.SetStateAction<Partial<ReactSketchCanvasProps>>>
-  room: string
 }
 
-function InputField({ fieldName, type = 'text', canvasProps, setCanvasProps, room }: InputFieldProps) {
+function InputField({ fieldName, type = 'text', canvasProps, setCanvasProps }: InputFieldProps) {
   let value; 
   const socket = useContext(SocketContext)
   const handleChange = ({ target }: React.ChangeEvent<HTMLInputElement>): void => {
     if (fieldName === 'backgroundImage') {
       socket.emit('updateCanvasBgc', {
-        roomId: room,
         canvasBgc: target.value,
       });
     }
@@ -80,7 +78,7 @@ export function SketchCanvas({room}: SketchCanvasProps) {
     const clearCanvas = canvasRef.current?.clearCanvas
 
     if (clearCanvas) {
-      socket.emit('canvasClean', { roomId: room })
+      socket.emit('canvasClean', {})
       clearCanvas()
     }
   }
@@ -125,7 +123,7 @@ export function SketchCanvas({room}: SketchCanvasProps) {
     socket.on('updateCanvasBgc', (canvasBgc: string) => {
       setCanvasProps((prevState) => ({ ...prevState, backgroundImage: canvasBgc }))
     })
-    socket.emit('getCanvasBgc', { roomId: room }, (canvasBgc: string) => {
+    socket.emit('getCanvasBgc', {}, (canvasBgc: string) => {
       setCanvasProps((prevState) => ({ ...prevState, backgroundImage: canvasBgc }))
     })
   }, [room])
@@ -145,7 +143,7 @@ export function SketchCanvas({room}: SketchCanvasProps) {
   const [getCanvasFlag, setGetCanvasFlag] = useState(true)
   useMemo(() => {
     if (getCanvasFlag) {
-      socket.emit('getCanvas', { roomId: room }, (canvas: any) => {
+      socket.emit('getCanvas', {}, (canvas: any) => {
         if (canvas && canvasRef.current) {
           const pathsToUpdate = JSON.parse(canvas)
           canvasRef.current?.loadPaths(pathsToUpdate)
@@ -271,7 +269,6 @@ export function SketchCanvas({room}: SketchCanvasProps) {
                   type={type}
                   canvasProps={canvasProps}
                   setCanvasProps={setCanvasProps}
-                  room={room}
                 />
               )
             })}
@@ -347,7 +344,7 @@ export function SketchCanvas({room}: SketchCanvasProps) {
                 ref={canvasRef}
                 onChange={onChange}
                 onStroke={(stroke, isEraser) => {
-                  socket.emit('canvasChange', { roomId: room, canvasAction: stroke })
+                  socket.emit('canvasChange', { canvasAction: stroke })
                   console.log('emited')
                   setLastStroke({ stroke, isEraser })
                 }}
