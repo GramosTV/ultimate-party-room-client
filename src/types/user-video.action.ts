@@ -1,11 +1,6 @@
-import { UserEntity } from 'types';
-export enum UserVideoAction {
-    pause,
-    play,
-    forward,
-    url,
-}
+import { UserEntity, UserVideoAction } from 'types';
 export interface UserVideoActionEntity {
     userVideoAction: UserVideoAction;
     user: UserEntity;
+    hidden?: boolean;
 }
