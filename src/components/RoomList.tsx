@@ -1,6 +1,7 @@
 import React, { Dispatch, SetStateAction, useContext, useMemo, useRef, useState } from 'react'
 import { SocketContext } from '../context/Socket'
 import { RoomAction, RoomActionRes, RoomEntity, UpdateRes } from 'types'
+import { toast } from 'react-toastify'
 interface RoomsListProps {
   room: string
   setJoinedRoom: Dispatch<SetStateAction<boolean>>
@@ -55,7 +56,9 @@ export function RoomList({setJoinedRoom, setRoom}: RoomsListProps) {
         })
         setCurrentRoom(updateResult.updatedItem)
       } else {
-        window.alert('Failed to join room')
+        toast.error('Failed to join room', {
+          theme: 'colored'
+        })
       }
     })
   }

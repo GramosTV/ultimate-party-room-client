@@ -6,8 +6,7 @@ interface ChatProps {
   name: string;
   room: string;
 }
-export function Chat(props: ChatProps) {
-  const {name, room} = props;
+export function Chat({name, room}: ChatProps) {
   const [messages, setMessages] = useState<MessageEntity[]>([]);
   const socket = useContext(SocketContext);
   const [userIsTyping, setUserIsTyping] = useState<string>('');

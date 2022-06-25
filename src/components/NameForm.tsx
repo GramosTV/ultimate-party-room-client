@@ -5,7 +5,7 @@ interface NameFormProps {
   setName: Dispatch<SetStateAction<string>>;
 }
 export const NameForm = ({setPfpForm, setName}: NameFormProps ) => (
-   <div>
+   <div className="intro">
     <h1 className='gradientText animate__animated animate__fadeIn'>Welcome!</h1>
      <h2 className='gradientText animate__animated animate__fadeIn' style={{animationDelay: '1.2s'}}>Enter your name</h2>
      <Formik

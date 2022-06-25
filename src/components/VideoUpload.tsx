@@ -3,6 +3,7 @@ import { SocketContext } from '../context/Socket'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpload, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { Player } from './VideoPlayer';
+import { toast } from 'react-toastify';
 interface VideoUploadProps {
   room: string;
   setPlayerState: Dispatch<SetStateAction<Player>>;
@@ -15,12 +16,16 @@ export function VideoUpload({room, setPlayerState}: VideoUploadProps) {
     const file = e.target.files[0]
     if (file && !file.name) {
       setFileVerification(false)
-      window.alert('Please select a file')
+      toast.warn('Please select a file first', {
+        theme: 'colored',
+      })
       return false
     }
     if (file.size > 100e6) {
       setFileVerification(false)
-      window.alert('Please upload a file smaller than 100 MB')
+      toast.warn('Please upload a file smaller than 100 MB', {
+        theme: 'colored',
+      })
       return false
     }
     setFileVerification(true)

@@ -99,7 +99,6 @@ export function UserList({ room, userVideoAction }: RoomsListProps) {
   return (
     <>
       <div className='userList'>
-        <ToastContainer />
         <div className='userBox'>
           <h3>Users in Room</h3>
           <div className='list'>
