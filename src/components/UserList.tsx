@@ -45,6 +45,7 @@ export function UserList({ room, userVideoAction }: RoomsListProps) {
       }
     })
   }, [])
+
   useEffect(() => {
     let action: string
     switch (userVideoAction?.userVideoAction) {
@@ -69,6 +70,27 @@ export function UserList({ room, userVideoAction }: RoomsListProps) {
         const data = [...actualState].filter((item) => item.id !== userVideoAction?.user?.id)
         if (userVideoAction?.user) {
           data.unshift({ ...userVideoAction?.user, action: userVideoAction?.userVideoAction })
+          setUsers((actualState) => {
+          console.log('set timeout')
+            return actualState.map((item, i) => {
+              if (item.id === userVideoAction?.user?.id) {
+                setTimeout(() => {
+                  setUsers((actualState) => {
+                    return actualState.map((item) => {
+                      if (item.id === userVideoAction?.user?.id && item.timeoutFlag === 1) {
+                        return { ...item, action: NaN, timeoutFlag: undefined }
+                      } else if (item.id === userVideoAction?.user?.id) {
+                        return { ...item, timeoutFlag: 1 }
+                      }
+                      return item
+                    })
+                  })
+                }, 3000)
+                return { ...data[i], timeoutFlag: item.timeoutFlag === undefined ? 1 : undefined}
+              }
+              return data[i]
+            })
+            })
         }
         return data
       })
@@ -110,7 +132,7 @@ export function UserList({ room, userVideoAction }: RoomsListProps) {
                           case UserVideoAction.url:
                             return <FontAwesomeIcon icon={faFileVideo} />
                           default:
-                            return <FontAwesomeIcon icon={faQuestion} />
+                            return null
                         }
                       })()}
                     </div>
