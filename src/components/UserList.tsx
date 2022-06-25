@@ -78,15 +78,15 @@ export function UserList({ room, userVideoAction }: RoomsListProps) {
                   setUsers((actualState) => {
                     return actualState.map((item) => {
                       if (item.id === userVideoAction?.user?.id && item.timeoutFlag === true) {
-                        return { ...item, action: NaN, timeoutFlag: undefined }
+                        return { ...item, action: NaN, timeoutFlag: undefined };
                       } else if (item.id === userVideoAction?.user?.id) {
-                        return { ...item, timeoutFlag: true }
+                        return { ...item, timeoutFlag: true };
                       }
                       return item
                     })
                   })
                 }, 3000)
-                return { ...data[i], timeoutFlag: item.timeoutFlag === undefined ? true : undefined}
+                return { ...data[i], timeoutFlag: item.timeoutFlag === undefined ? undefined : true}
               }
               return data[i]
             })
