@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { io } from 'socket.io-client';
@@ -11,6 +11,8 @@ import { VideoPlayer } from './components/VideoPlayer';
 import { ProfilePicUpload } from './components/ProfilePicUpload';
 import { SketchCanvas } from './components/SketchCanvas';
 import { UserVideoActionEntity } from './types/user-video.action';
+import { toast, ToastContainer } from 'react-toastify';
+import { Background } from './components/Background';
 
 export function App() {
   const socket = useContext(SocketContext)
@@ -20,6 +22,24 @@ export function App() {
   const [room, setRoom] = useState<string>('')
   const [pfpForm, setPfpForm] = useState<boolean>(false)
   const [userVideoAction, setUserVideoAction] = useState<UserVideoActionEntity>()
+  const disconnectFlag = useRef<boolean>(true)
+  socket.on('disconnect', () => {
+  setJoined(false)
+  setJoinedRoom(false)
+  setName('')
+  setRoom('')
+  setPfpForm(false)
+  setUserVideoAction(undefined)
+    if (disconnectFlag.current) {
+      disconnectFlag.current = false
+      toast.error('Disconnected', {
+        theme: 'colored'
+      })
+      setTimeout(() => {
+        disconnectFlag.current = true
+      }, 2000)
+    }
+  });
   const join = () => {
     socket.emit('join', {name}, () => {
         setJoined(true)
@@ -27,6 +47,8 @@ export function App() {
   }
   return (
     <SocketProvider>
+      <Background />
+      <ToastContainer />
     <div className='App'>
       {room ? <h2 className='roomLabel'>You&apos;re in room #{room}</h2> : null}
       {joinedRoom ? 

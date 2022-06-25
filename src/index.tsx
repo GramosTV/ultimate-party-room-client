@@ -11,6 +11,7 @@ import './style/nameForm.css';
 import './style/pfpForm.css';
 import './style/chat.css';
 import './style/app.css';
+import './style/background.css';
 import { App } from './App';
 import reportWebVitals from './reportWebVitals';
 
