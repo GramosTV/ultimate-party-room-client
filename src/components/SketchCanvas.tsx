@@ -1,6 +1,6 @@
 import { faEraser, faImage, faPen, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useContext, useEffect, useMemo, useState } from 'react'
+import React, { Dispatch, SetStateAction, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
   CanvasPath,
   ExportImageType,
@@ -9,6 +9,8 @@ import {
   ReactSketchCanvasRef,
 } from 'react-sketch-canvas'
 import { SocketContext } from '../context/Socket'
+import { UserEntity, UserRoomAction } from 'types'
+import { UserRoomActionEntity } from 'src/types/user-video.action'
 
 type Handlers = [string, () => void, string][]
 
@@ -20,15 +22,15 @@ interface InputFieldProps {
 }
 
 function InputField({ fieldName, type = 'text', canvasProps, setCanvasProps }: InputFieldProps) {
-  let value; 
+  let value
   const socket = useContext(SocketContext)
   const handleChange = ({ target }: React.ChangeEvent<HTMLInputElement>): void => {
     if (fieldName === 'backgroundImage') {
       socket.emit('updateCanvasBgc', {
         canvasBgc: target.value,
-      });
+      })
     }
-    
+
     if (fieldName === 'strokeWidth') {
       setStrokeWidth(target.value)
       value = strokeWidth
@@ -39,7 +41,6 @@ function InputField({ fieldName, type = 'text', canvasProps, setCanvasProps }: I
       value = canvasProps[fieldName] as string
     }
 
-
     setCanvasProps((prevCanvasProps: Partial<ReactSketchCanvasProps>) => ({
       ...prevCanvasProps,
       [fieldName]: type === 'range' ? Number(target.value) : target.value,
@@ -48,6 +49,7 @@ function InputField({ fieldName, type = 'text', canvasProps, setCanvasProps }: I
   const [strokeWidth, setStrokeWidth] = useState('0')
   const [eraserWidth, setEraserWidth] = useState('0')
   const id = 'validation' + fieldName
+
   
   return (
     <div className='p-2 col-10 canvasProps'>
@@ -69,17 +71,21 @@ function InputField({ fieldName, type = 'text', canvasProps, setCanvasProps }: I
   )
 }
 interface SketchCanvasProps {
-  room: string
+  room: string;
+  setUserRoomAction: Dispatch<SetStateAction<UserRoomActionEntity | undefined>>
 }
-export function SketchCanvas({room}: SketchCanvasProps) {
-  const socket = useContext(SocketContext);
+export function SketchCanvas({ room, setUserRoomAction }: SketchCanvasProps) {
+  const socket = useContext(SocketContext)
   const canvasRef = React.createRef<ReactSketchCanvasRef>()
+  const cleanFlag = useRef<boolean>(false);
   const clearHandler = () => {
     const clearCanvas = canvasRef.current?.clearCanvas
-
-    if (clearCanvas) {
+    if (clearCanvas && cleanFlag.current) {
+      console.log('emit')
       socket.emit('canvasClean', {})
       clearCanvas()
+    } else {
+      cleanFlag.current = true;
     }
   }
   const [canvasProps, setCanvasProps] = React.useState<Partial<ReactSketchCanvasProps>>({
@@ -120,14 +126,14 @@ export function SketchCanvas({room}: SketchCanvasProps) {
       withTimestamp: true,
       allowOnlyPointerType: 'all',
     })
-    socket.on('updateCanvasBgc', (canvasBgc: string) => {
+    socket.on('updateCanvasBgc', ({canvasBgc, user}: {canvasBgc: string, user: UserEntity}) => {
       setCanvasProps((prevState) => ({ ...prevState, backgroundImage: canvasBgc }))
+      setUserRoomAction({ userRoomAction: UserRoomAction.changeBgc, user })
     })
     socket.emit('getCanvasBgc', {}, (canvasBgc: string) => {
       setCanvasProps((prevState) => ({ ...prevState, backgroundImage: canvasBgc }))
     })
   }, [room])
-  
 
   const inputProps: Array<[keyof ReactSketchCanvasProps, 'text' | 'number' | 'range']> = [
     // ['className', 'text'],
@@ -139,7 +145,6 @@ export function SketchCanvas({room}: SketchCanvasProps) {
     ['eraserWidth', 'range'],
   ]
 
-  
   const [getCanvasFlag, setGetCanvasFlag] = useState(true)
   useMemo(() => {
     if (getCanvasFlag) {
@@ -156,14 +161,16 @@ export function SketchCanvas({room}: SketchCanvasProps) {
     }
   }, [canvasRef])
   useEffect(() => {
-    socket.on('canvasChange', (canvasAction: CanvasPath) => {
+    socket.on('canvasChange', ({canvasAction, user}: {canvasAction: string, user: UserEntity}) => {
       const pathsToUpdate = JSON.parse(JSON.stringify(canvasAction))
       canvasRef.current?.loadPaths(pathsToUpdate)
+      setUserRoomAction({ userRoomAction: UserRoomAction.draw, user })
     })
-    socket.on('canvasClean', () => {
+    socket.on('canvasClean', (user: UserEntity) => {
       const clearCanvas = canvasRef.current?.clearCanvas
       if (clearCanvas) {
         clearCanvas()
+        setUserRoomAction({ userRoomAction: UserRoomAction.clean, user })
       }
     })
   }, [canvasRef])
@@ -214,9 +221,7 @@ export function SketchCanvas({room}: SketchCanvasProps) {
     }
   }
 
-  
-
-  const createButton = (label: string, handler: () => void, themeColor: string) => ( 
+  const createButton = (label: string, handler: () => void, themeColor: string) => (
     <button
       key={label}
       className={`btn btn-${themeColor} btn-block canvasBtn`}
@@ -224,19 +229,22 @@ export function SketchCanvas({room}: SketchCanvasProps) {
       onClick={handler}
     >
       {(() => {
-      if (label === 'Eraser') {
-        return <FontAwesomeIcon icon={faEraser} className={
-          eraseState ? 'active' : ''}/>
-      } else if (label === 'Pen') {
-        return <FontAwesomeIcon icon={faPen} className={!eraseState ? 'active' : ''}/>
-      } else if (label === 'Clear All') {
-        return <FontAwesomeIcon icon={faTrashCan}/>
-      } else if (label === 'Export Image') {
-        return <FontAwesomeIcon icon={faImage}/>
-      } else if (label === 'Export SVG') {
-        return <div><FontAwesomeIcon icon={faImage}/> SVG</div> 
-      }
-      return label
+        if (label === 'Eraser') {
+          return <FontAwesomeIcon icon={faEraser} className={eraseState ? 'active' : ''} />
+        } else if (label === 'Pen') {
+          return <FontAwesomeIcon icon={faPen} className={!eraseState ? 'active' : ''} />
+        } else if (label === 'Clear All') {
+          return <FontAwesomeIcon icon={faTrashCan} />
+        } else if (label === 'Export Image') {
+          return <FontAwesomeIcon icon={faImage} />
+        } else if (label === 'Export SVG') {
+          return (
+            <div>
+              <FontAwesomeIcon icon={faImage} /> <span>SVG</span>{' '}
+            </div>
+          )
+        }
+        return label
       })()}
     </button>
   )
@@ -255,10 +263,10 @@ export function SketchCanvas({room}: SketchCanvasProps) {
   return (
     <main className='container-fluid p-5'>
       <h3 className='gradientText'>Canvas</h3>
-      <div className='row'>
+      <div className='row canvasContainer'>
         <aside className='col-3 border-right'>
           {/* <header className='my-5'> */}
-            {/* <h3>Props</h3> */}
+          {/* <h3>Props</h3> */}
           {/* </header> */}
           <form className='canvasPropsForm'>
             {inputProps.map(([fieldName, type]) => {
@@ -336,8 +344,7 @@ export function SketchCanvas({room}: SketchCanvasProps) {
           </form>
         </aside>
         <section className='col-9'>
-          <header className='my-5'>
-          </header>
+          <header className='my-5'></header>
           <section className='row no-gutters canvas-area m-0 p-0'>
             <div className='col-9 canvas p-0'>
               <ReactSketchCanvas
@@ -359,46 +366,42 @@ export function SketchCanvas({room}: SketchCanvasProps) {
               </div>
             </div>
           </section>
-         
         </section>
         <div className='exports'>
-
-          
-<section className='row image-export p-3 justify-content-center align-items-start'>
-  <div className='col-5 offset-2'>
-    <p>Exported image</p>
-    <img
-      className='exported-image'
-      id='exported-image'
-      src={
-        dataURI ||
-        'https://via.placeholder.com/500x250/000000/FFFFFF/?text=Click on export image'
-      }
-      alt='exported'
-    />
-  </div>
-</section>
-
-<section className='row image-export p-3 justify-content-center align-items-start'>
-  <div className='col-5 offset-2'>
-    <p>Exported SVG</p>
-    {svg ? (
-      <span
-        id='exported-svg'
-        className='exported-image'
-        dangerouslySetInnerHTML={{ __html: svg }}
-      />
-    ) : (
-      <img
-        src='https://via.placeholder.com/500x250/000000/FFFFFF/?text=Click on export SVG'
-        alt='Svg Export'
-        id='exported-svg'
-        className='exported-image'
-      />
-    )}
-  </div>
-</section>
-</div>
+          <section className='row image-export p-3 justify-content-center align-items-start'>
+            <div className='col-5 offset-2'>
+              <p>Exported image</p>
+              <img
+                className='exported-image'
+                id='exported-image'
+                src={
+                  dataURI ||
+                  'https://via.placeholder.com/500x250/000000/FFFFFF/?text=Click on export image'
+                }
+                alt='exported'
+              />
+            </div>
+          </section>
+          <section className='row image-export p-3 justify-content-center align-items-start'>
+            <div className='col-5 offset-2'>
+              <p>Exported SVG</p>
+              {svg ? (
+                <span
+                  id='exported-svg'
+                  className='exported-image'
+                  dangerouslySetInnerHTML={{ __html: svg }}
+                />
+              ) : (
+                <img
+                  src='https://via.placeholder.com/500x250/000000/FFFFFF/?text=Click on export SVG'
+                  alt='Svg Export'
+                  id='exported-svg'
+                  className='exported-image'
+                />
+              )}
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   )
