@@ -2,8 +2,8 @@
   position: relative;
   width: 750px;
   height: 80vh;
-  background-color: rgba(238, 192, 198, 0.2);
-  background-image: linear-gradient(315deg, rgba(238, 192, 198, 0.2) 0%, rgba(126, 232, 250, 0.2) 74%);
+  background-color: rgba(142, 197, 252, 0.2);
+  background-image: linear-gradient(62deg, rgba(142, 197, 252, 0.2) 0%, rgba(224, 195, 252, 0.2) 74%);
   -webkit-box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
           box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -14,6 +14,12 @@
           backdrop-filter: blur(12px);
   margin: 0 auto;
   margin-bottom: 50px;
+}
+
+@media (max-width: 767px) {
+  .roomBox {
+    width: 100vw;
+  }
 }
 
 .roomBox h3 {
@@ -83,5 +89,11 @@
   -webkit-transition: 0.5s;
   transition: 0.5s;
   width: 100%;
+}
+
+@media (max-width: 500px) {
+  .roomBox .list .room .content h4 {
+    font-size: 16px;
+  }
 }
 /*# sourceMappingURL=roomList.css.map */

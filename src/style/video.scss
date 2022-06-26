@@ -5,6 +5,7 @@
   margin: 0px 40px;
   .react-player {
     margin: 0 auto;
+    aspect-ratio: 16 / 9;
   }
   .videoInputContainer {
     max-height: 100px;
@@ -12,20 +13,24 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
+    flex-wrap: wrap;
+    @media (max-width: 768px) {
+      margin-bottom: 78px;
+    }
     .urlContainer {
       display: flex;
       justify-content: space-around;
       align-items: center;
       flex-direction: column;
       .gradientText {
-        margin-bottom: 5px;
+        margin: 5px 0;
         min-height: auto;
         font-weight: 600;
       }
     }
     .videoUpload {
       .gradientText {
-        margin-bottom: 5px;
+        margin: 5px 0;
         min-height: auto;
       }
       div form.vidForm {
@@ -191,6 +196,7 @@
     -webkit-appearance: none;
     margin: 10px 0;
     width: 92%;
+    background-color: transparent;
   }
   input[type='range']:focus {
     outline: none;
