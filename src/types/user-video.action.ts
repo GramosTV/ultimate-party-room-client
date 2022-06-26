@@ -1,6 +1,6 @@
-import { UserEntity, UserVideoAction } from 'types';
-export interface UserVideoActionEntity {
-    userVideoAction: UserVideoAction;
+import { UserEntity, UserRoomAction } from 'types';
+export interface UserRoomActionEntity {
+    userRoomAction: UserRoomAction;
     user: UserEntity;
     hidden?: boolean;
 }
