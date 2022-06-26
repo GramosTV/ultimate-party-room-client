@@ -5,9 +5,10 @@ import { toast } from 'react-toastify'
 interface RoomsListProps {
   room: string
   setJoinedRoom: Dispatch<SetStateAction<boolean>>
-  setRoom: Dispatch<SetStateAction<string>>
+  setRoom: Dispatch<SetStateAction<string>>;
+  className: string;
 }
-export function RoomList({setJoinedRoom, setRoom}: RoomsListProps) {
+export function RoomList({setJoinedRoom, setRoom, className}: RoomsListProps) {
   const socket = useContext(SocketContext)
   const [rooms, setRooms] = useState<RoomEntity[]>([])
   const [currentRoom, setCurrentRoom] = useState<RoomEntity | null>(null)
@@ -64,7 +65,7 @@ export function RoomList({setJoinedRoom, setRoom}: RoomsListProps) {
   }
   return (
     <>
-      <div className='roomList'>
+      <div className={`roomList ${className}`}>
         <div className='roomBox'>
           <h3>Rooms</h3>
           <button className='submitForm' onClick={createRoom}>Create a room</button>
