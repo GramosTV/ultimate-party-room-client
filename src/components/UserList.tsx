@@ -1,21 +1,26 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { SocketContext } from '../context/Socket'
-import { UpdateRes, UserAction, UserEntity, UserVideoAction } from 'types'
-import { UserVideoActionEntity } from '../types/user-video.action'
+import { UpdateRes, UserAction, UserEntity, UserRoomAction } from 'types'
+import { UserRoomActionEntity } from '../types/user-video.action'
 import { ToastContainer, toast } from 'react-toastify'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faFileVideo,
   faForward,
+  faImage,
   faPause,
+  faPen,
   faPlay,
   faQuestion,
+  faTrashCan,
+  faUsers,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons'
 interface RoomsListProps {
   room: string
-  userVideoAction: UserVideoActionEntity | undefined
+  userRoomAction: UserRoomActionEntity | undefined
 }
-export function UserList({ room, userVideoAction }: RoomsListProps) {
+export function UserList({ room, userRoomAction }: RoomsListProps) {
   const socket = useContext(SocketContext)
   const [users, setUsers] = useState<UserEntity[]>([])
   const userJoinAnimation = useRef(false)
@@ -48,58 +53,77 @@ export function UserList({ room, userVideoAction }: RoomsListProps) {
 
   useEffect(() => {
     let action: string
-    switch (userVideoAction?.userVideoAction) {
-      case UserVideoAction.pause:
-        action = 'paused the video'
+    switch (userRoomAction?.userRoomAction) {
+      case UserRoomAction.pause:
+        action = 'has paused the video'
         break
-      case UserVideoAction.play:
-        action = 'played the video'
+      case UserRoomAction.play:
+        action = 'has played the video'
         break
-      case UserVideoAction.forward:
-        action = 'forwarded the video'
+      case UserRoomAction.forward:
+        action = 'has forwarded the video'
         break
-      case UserVideoAction.url:
-        action = 'changed the video source'
+      case UserRoomAction.url:
+        action = 'has changed the video source'
+        break
+      case UserRoomAction.draw:
+        action = 'is drawing on the canvas'
+        break
+      case UserRoomAction.clean:
+        action = 'has cleared the canvas'
+        break
+      case UserRoomAction.changeBgc:
+        action = 'has changed background of the canvas'
         break
       default:
         action = ''
     }
-    if (action && userVideoAction?.user?.clientId !== clientId && !userVideoAction?.hidden) {
-      toast(`${userVideoAction?.user?.name} has ${action}`)
+    if (action && userRoomAction?.user?.clientId !== clientId && !userRoomAction?.hidden) {
+      toast(`${userRoomAction?.user?.name} ${action}`)
       setUsers((actualState) => {
-        const data = [...actualState].filter((item) => item.id !== userVideoAction?.user?.id)
-        if (userVideoAction?.user) {
-          data.unshift({ ...userVideoAction?.user, action: userVideoAction?.userVideoAction })
+        const data = [...actualState].filter((item) => item.id !== userRoomAction?.user?.id)
+        if (userRoomAction?.user) {
+          data.unshift({ ...userRoomAction?.user, action: userRoomAction?.userRoomAction })
           setUsers((actualState) => {
-          console.log('set timeout')
+            console.log('set timeout')
             return actualState.map((item, i) => {
-              if (item.id === userVideoAction?.user?.id) {
+              if (item.id === userRoomAction?.user?.id) {
                 setTimeout(() => {
                   setUsers((actualState) => {
                     return actualState.map((item) => {
-                      if (item.id === userVideoAction?.user?.id && item.timeoutFlag === true) {
-                        return { ...item, action: NaN, timeoutFlag: undefined };
-                      } else if (item.id === userVideoAction?.user?.id) {
-                        return { ...item, timeoutFlag: true };
+                      if (item.id === userRoomAction?.user?.id && item.timeoutFlag === true) {
+                        return { ...item, action: NaN, timeoutFlag: undefined }
+                      } else if (item.id === userRoomAction?.user?.id) {
+                        return { ...item, timeoutFlag: true }
                       }
                       return item
                     })
                   })
                 }, 3000)
-                return { ...data[i], timeoutFlag: item.timeoutFlag === undefined ? undefined : true}
+                return {
+                  ...data[i],
+                  timeoutFlag: item.timeoutFlag === undefined ? undefined : true,
+                }
               }
               return data[i]
             })
-            })
+          })
         }
         return data
       })
     }
-  }, [userVideoAction?.user?.id, userVideoAction?.userVideoAction])
+  }, [userRoomAction?.user?.id, userRoomAction?.userRoomAction])
+  const [animate, setAnimate] = useState(false)
+  const handleSwitch = () => {
+    setAnimate(!animate)
+  }
   return (
     <>
-      <div className='userList'>
+      <div className={animate ? 'userList animate' : 'userList'}>
         <div className='userBox'>
+          <div className='switch' onClick={handleSwitch}>
+            {animate ? <FontAwesomeIcon icon={faXmark} /> : <FontAwesomeIcon icon={faUsers} />}
+          </div>
           <h3>Users in Room</h3>
           <div className='list'>
             {users.map((user, i) => (
@@ -122,14 +146,20 @@ export function UserList({ room, userVideoAction }: RoomsListProps) {
                     <div>
                       {(() => {
                         switch (user?.action) {
-                          case UserVideoAction.pause:
+                          case UserRoomAction.pause:
                             return <FontAwesomeIcon icon={faPause} />
-                          case UserVideoAction.play:
+                          case UserRoomAction.play:
                             return <FontAwesomeIcon icon={faPlay} />
-                          case UserVideoAction.forward:
+                          case UserRoomAction.forward:
                             return <FontAwesomeIcon icon={faForward} />
-                          case UserVideoAction.url:
+                          case UserRoomAction.url:
                             return <FontAwesomeIcon icon={faFileVideo} />
+                          case UserRoomAction.draw:
+                            return <FontAwesomeIcon icon={faPen} />
+                          case UserRoomAction.clean:
+                            return <FontAwesomeIcon icon={faTrashCan} />
+                          case UserRoomAction.changeBgc:
+                            return <FontAwesomeIcon icon={faImage} />
                           default:
                             return null
                         }

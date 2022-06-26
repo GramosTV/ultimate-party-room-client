@@ -10,7 +10,7 @@ import { UserList } from './components/UserList';
 import { VideoPlayer } from './components/VideoPlayer';
 import { ProfilePicUpload } from './components/ProfilePicUpload';
 import { SketchCanvas } from './components/SketchCanvas';
-import { UserVideoActionEntity } from './types/user-video.action';
+import { UserRoomActionEntity } from './types/user-video.action';
 import { toast, ToastContainer } from 'react-toastify';
 import { Background } from './components/Background';
 
@@ -21,7 +21,7 @@ export function App() {
   const [name, setName] = useState<string>('')
   const [room, setRoom] = useState<string>('')
   const [pfpForm, setPfpForm] = useState<boolean>(false)
-  const [userVideoAction, setUserVideoAction] = useState<UserVideoActionEntity>()
+  const [userRoomAction, setUserRoomAction] = useState<UserRoomActionEntity>()
   const disconnectFlag = useRef<boolean>(true)
   socket.on('disconnect', () => {
   setJoined(false)
@@ -29,7 +29,7 @@ export function App() {
   setName('')
   setRoom('')
   setPfpForm(false)
-  setUserVideoAction(undefined)
+  setUserRoomAction(undefined)
     if (disconnectFlag.current) {
       disconnectFlag.current = false
       toast.error('Disconnected', {
@@ -53,13 +53,13 @@ export function App() {
       {room ? <h2 className='roomLabel'>You&apos;re in room #{room}</h2> : null}
       {joinedRoom ? 
       <div className='container'>
-      {joinedRoom ? <UserList room={room} userVideoAction={userVideoAction}/> : null}
-      <VideoPlayer room={room} setUserVideoAction={setUserVideoAction}/>
+      {joinedRoom ? <UserList room={room} userRoomAction={userRoomAction}/> : null}
+      <VideoPlayer room={room} setUserRoomAction={setUserRoomAction}/>
       <Chat name={name} room={room}/>
       </div>
       : null}
-      {joinedRoom ? <SketchCanvas room={room} /> : null}
-      {joined ? <RoomList room={room} setJoinedRoom={setJoinedRoom} setRoom={setRoom} /> : (pfpForm ? <ProfilePicUpload join={join}/> : <NameForm setPfpForm={setPfpForm} setName={setName}/>)}
+      {joinedRoom ? <SketchCanvas room={room} setUserRoomAction={setUserRoomAction}/> : null}
+      {joined ? <RoomList room={room} setJoinedRoom={setJoinedRoom} setRoom={setRoom} className={joinedRoom ? '' : 'intro'} /> : (pfpForm ? <ProfilePicUpload join={join}/> : <NameForm setPfpForm={setPfpForm} setName={setName}/>)}
     </div>
     </SocketProvider>
   );

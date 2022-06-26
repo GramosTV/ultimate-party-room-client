@@ -15,7 +15,7 @@ import screenfull from 'screenfull'
 import Duration from './Duration'
 import { SocketContext } from '../context/Socket'
 import {
-  UserVideoAction,
+  UserRoomAction,
   VideoMomentAction,
   VideoState,
   VideoStateAction,
@@ -32,7 +32,7 @@ import {
   faVolumeUp,
 } from '@fortawesome/free-solid-svg-icons'
 import { VideoUpload } from './VideoUpload'
-import { UserVideoActionEntity } from 'src/types/user-video.action'
+import { UserRoomActionEntity } from 'src/types/user-video.action'
 import { toast } from 'react-toastify'
 export interface Player {
   url?: string | string[] | SourceProps[] | MediaStream | undefined
@@ -53,10 +53,10 @@ export interface Player {
 }
 interface VideoPlayerProps {
   room: string
-  setUserVideoAction: Dispatch<SetStateAction<UserVideoActionEntity | undefined>>
+  setUserRoomAction: Dispatch<SetStateAction<UserRoomActionEntity | undefined>>
 }
 // PLEASE DON'T TELL JAKUB KRÓL ABOUT THE ANY's HERE, the example js code from the react-player package is pretty old that's why I had to skip types for some of the stuff here, forgive me.
-export function VideoPlayer({ room, setUserVideoAction }: VideoPlayerProps) {
+export function VideoPlayer({ room, setUserRoomAction }: VideoPlayerProps) {
   const socket = useContext(SocketContext)
   const [playerState, setPlayerState] = useState<Player>({
     url: undefined,
@@ -74,18 +74,34 @@ export function VideoPlayer({ room, setUserVideoAction }: VideoPlayerProps) {
   })
   const player = useRef(null)
   const videoMomentFlag = useRef(false)
+  const [videoSize, setVideoSize] = useState<boolean>(false)
+  const onLoad = useRef(true)
+  const handleResize = () => {
+    if (window.innerWidth > 1280) {
+      setVideoSize(true)
+    } else {
+      setVideoSize(false)
+    }
+  }
+  useEffect(() => {
+    if (onLoad.current) {
+      handleResize()
+      onLoad.current = false
+    }
+    window.addEventListener('resize', handleResize)
+  })
   useEffect(() => {
     setPlayerState((prevState) => ({ ...prevState, url: undefined }))
     setPlayerState((actualState) => {
       return { ...actualState, playing: true }
     })
     socket.on('videoState', ({ videoState, user }: VideoStateAction) => {
-      setUserVideoAction({ userVideoAction: Number(videoState), user })
+      setUserRoomAction({ userRoomAction: Number(videoState), user })
       setPlayerState((actualState) => {
         return { ...actualState, playing: Boolean(videoState) }
       })
       if (videoState === VideoState.pause) {
-        socket.emit('getVideoMoment', { roomId: room }, (videoMoment: number) => {
+        socket.emit('getVideoMoment', {}, (videoMoment: number) => {
           ;(player.current as any).seekTo(parseFloat(String(videoMoment)))
         })
       }
@@ -94,16 +110,16 @@ export function VideoPlayer({ room, setUserVideoAction }: VideoPlayerProps) {
       socket.emit('updateVideoMoment', {
         videoMoment: 0,
       })
-      setUserVideoAction({ userVideoAction: UserVideoAction.url, user })
+      setUserRoomAction({ userRoomAction: UserRoomAction.url, user })
       setPlayerState((prevState) => ({ ...prevState, url: videoUrl }))
       ;(player.current as any).seekTo(parseFloat(String(0)))
-      socket.emit('getVideoMoment', { roomId: room }, (videoMoment: number) => {
+      socket.emit('getVideoMoment', {}, (videoMoment: number) => {
         ;(player.current as any).seekTo(parseFloat(String(videoMoment)))
       })
     })
     socket.emit('getVideoUrl', {}, (videoUrl: string) => {
       setPlayerState((prevState) => ({ ...prevState, url: videoUrl }))
-      socket.emit('getVideoState', { roomId: room }, (videoState: VideoState) => {
+      socket.emit('getVideoState', {}, (videoState: VideoState) => {
         setPlayerState((prevState) => ({
           ...prevState,
           playing: Boolean(videoState),
@@ -111,7 +127,7 @@ export function VideoPlayer({ room, setUserVideoAction }: VideoPlayerProps) {
       })
     })
     socket.on('videoMoment', ({ videoMoment, user }: VideoMomentAction) => {
-      setUserVideoAction({ userVideoAction: UserVideoAction.forward, user })
+      setUserRoomAction({ userRoomAction: UserRoomAction.forward, user })
       ;(player.current as any).seekTo(parseFloat(String(videoMoment)))
     })
   }, [room])
@@ -141,7 +157,7 @@ export function VideoPlayer({ room, setUserVideoAction }: VideoPlayerProps) {
   }
   const handlePlayPause = () => {
     setPlayerState((actualState) => {
-      socket.emit('videoState', { roomId: room, videoState: !actualState.playing })
+      socket.emit('videoState', { videoState: !actualState.playing })
       return { ...actualState, playing: !actualState.playing }
     })
   }
@@ -157,7 +173,7 @@ export function VideoPlayer({ room, setUserVideoAction }: VideoPlayerProps) {
     setPlayerState((actualState) => {
       return { ...actualState, playing: false }
     })
-    socket.emit('getVideoMoment', { roomId: room }, (videoMoment: number) => {
+    socket.emit('getVideoMoment', {}, (videoMoment: number) => {
       ;(player.current as any).seekTo(parseFloat(String(videoMoment)))
     })
   }
@@ -187,11 +203,9 @@ export function VideoPlayer({ room, setUserVideoAction }: VideoPlayerProps) {
         return { ...actualState, seeking: false, playing: true }
       })
       socket.emit('videoMoment', {
-        roomId: room,
         videoMoment: playerState.played,
       })
       socket.emit('updateVideoMoment', {
-        roomId: room,
         videoMoment: playerState.played,
       })
       ;(player.current as any).seekTo(parseFloat(e.target.value))
@@ -213,7 +227,6 @@ export function VideoPlayer({ room, setUserVideoAction }: VideoPlayerProps) {
       })
       if (videoMomentFlag.current) {
         socket.emit('updateVideoMoment', {
-          roomId: room,
           videoMoment: playerState.played,
         })
       }
@@ -282,7 +295,7 @@ export function VideoPlayer({ room, setUserVideoAction }: VideoPlayerProps) {
                       videoUrl: urlInput,
                     })
                     ;(player.current as any).seekTo(parseFloat(String(0)))
-                    socket.emit('getVideoMoment', { roomId: room }, (videoMoment: number) => {
+                    socket.emit('getVideoMoment', {}, (videoMoment: number) => {
                       ;(player.current as any).seekTo(parseFloat(String(videoMoment)))
                     })
                   }}
@@ -296,8 +309,8 @@ export function VideoPlayer({ room, setUserVideoAction }: VideoPlayerProps) {
           <ReactPlayer
             ref={player}
             className='react-player'
-            width={`${640 * 1.3}px`}
-            height={`${320 * 1.3}px`}
+            width={videoSize ? `${640 * 1.3}px` : '98vw'}
+            height={videoSize ? `${320 * 1.3}px` : 'auto'}
             url={url}
             pip={pip}
             playing={playing}
@@ -308,13 +321,13 @@ export function VideoPlayer({ room, setUserVideoAction }: VideoPlayerProps) {
             volume={volume}
             muted={muted}
             onReady={() => {
-              socket.emit('getVideoState', { roomId: room }, (videoState: VideoState) => {
+              socket.emit('getVideoState', {}, (videoState: VideoState) => {
                 setPlayerState((prevState) => ({
                   ...prevState,
                   playing: Boolean(videoState),
                 }))
               })
-              socket.emit('getVideoMoment', { roomId: room }, (videoMoment: number) => {
+              socket.emit('getVideoMoment', {}, (videoMoment: number) => {
                 if (!String(playerState.url).includes('http://localhost')) {
                   ;(player.current as any).seekTo(parseFloat(String(videoMoment)))
                 }
