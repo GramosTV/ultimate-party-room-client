@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from 'react';
+import React, { useContext, useMemo, useRef, useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { SocketContext } from '../context/Socket';
 import { MessageEntity } from 'types'
@@ -10,10 +10,9 @@ export const MessageInput = ({name}: MessageInputProps) => {
   const sendMessage = (text: string) => {
     socket.emit('createMessage', { name: name, text });
   };
-  let typingTimeout;
   const emitTyping = () => {
     socket.emit('typing', { isTyping: true });
-    typingTimeout = setTimeout(() => {
+    setTimeout(() => {
       socket.emit('typing', { isTyping: false });
     }, 2000);
   };
