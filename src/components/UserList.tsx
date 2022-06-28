@@ -36,17 +36,18 @@ export function UserList({ room, userRoomAction }: RoomsListProps) {
       setUsers(users)
     })
     socket.on('usersInRoom', (updateRes: UpdateRes) => {
-      console.log(updateRes)
       if (updateRes.result === UserAction.joined) {
         userJoinAnimation.current = true
         setUsers((actualState) => {
           return [updateRes.updatedItem, ...actualState]
         })
+        toast(`${updateRes.updatedItem.name} has joined the room`)
       } else if (updateRes.result === UserAction.left) {
         userJoinAnimation.current = false
         setUsers((actualState) => {
           return actualState.filter((item) => item.id !== updateRes.updatedItem.id)
         })
+        toast(`${updateRes.updatedItem.name} has left the room`)
       }
     })
   }, [])
@@ -113,13 +114,19 @@ export function UserList({ room, userRoomAction }: RoomsListProps) {
       })
     }
   }, [userRoomAction?.user?.id, userRoomAction?.userRoomAction])
+  const animationCd = useRef<boolean>(true)
+  useMemo(() => {
+    setTimeout(() => {
+      animationCd.current = false
+    }, 600)
+  }, [])
   const [animate, setAnimate] = useState(false)
   const handleSwitch = () => {
     setAnimate(!animate)
   }
   return (
     <>
-      <div className={animate ? 'userList animate' : 'userList'}>
+      <div className={animate ? 'userList animate' : 'userList'} style={{animation: `${animationCd.current ? '0s' : ''}`}}>
         <div className='userBox'>
           <div className='switch' onClick={handleSwitch}>
             {animate ? <FontAwesomeIcon icon={faXmark} /> : <FontAwesomeIcon icon={faUsers} />}

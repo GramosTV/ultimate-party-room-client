@@ -32,6 +32,7 @@ export function App() {
   setUserRoomAction(undefined)
     if (disconnectFlag.current) {
       disconnectFlag.current = false
+      socket.emit('disconnect')
       toast.error('Disconnected', {
         theme: 'colored'
       })
