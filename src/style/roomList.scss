@@ -1,0 +1,75 @@
+$gradient1: #8EC5FC;
+$gradient2: #E0C3FC;
+$deg: 62deg;
+.roomBox {
+  position: relative;
+  width: 750px;
+  height: 80vh;
+  //   background-color: #0093e9;
+  //   background-image: linear-gradient(160deg, #0093e9 0%, #80d0c7 100%);
+  background-color: rgba($gradient1, 0.2);
+  background-image: linear-gradient($deg, rgba($gradient1, 0.2) 0%, rgba($gradient2, 0.2) 74%);
+
+  // box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  // border-right: 1px solid rgba(255, 255, 255, 0.2);
+  // border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  z-index: 10;
+  padding: 20px;
+  backdrop-filter: blur(12px);
+  margin: 0 auto;
+  margin-bottom: 50px;
+  @media (max-width: 767px) {
+    width: 100vw;
+  }
+  h3 {
+    color: #fff;
+    margin-bottom: 20px;
+  }
+  .list {
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    padding: 10px;
+    border-radius: 10px;
+    margin: 10px 0;
+    transition: 0.5s;
+    overflow-y: auto;
+    height: 85%;
+    .room {
+      margin-bottom: 5px;
+      padding: 10px 2px;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 10px;
+      .content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: #fff;
+        width: 100%;
+        button {
+          width: 80px;
+          height: 40px;
+          border-radius: 10px !important;
+          color: #eee;
+          font-size: 22px;
+          margin: 0 auto;
+        }
+        h4 {
+          line-height: 1.2em;
+          font-weight: 600;
+          transition: 0.5s;
+          width: 100%;
+          @media (max-width: 500px) {
+            font-size: 16px;
+          }
+        }
+      }
+    }
+  }
+}

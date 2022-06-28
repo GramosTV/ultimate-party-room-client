@@ -1,0 +1,134 @@
+body {
+  margin: 0;
+  background: radial-gradient(#F5F7FA, #B8C6DB);
+}
+
+.light {
+  position: fixed;
+  width: 0px;
+  opacity: .75;
+  background-color: white;
+  -webkit-box-shadow: #669db2 0px 0px 12px 3px;
+          box-shadow: #669db2 0px 0px 12px 3px;
+  opacity: 0;
+  top: 100vh;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  margin: auto;
+  z-index: -1;
+}
+
+.x1 {
+  -webkit-animation: floatUp calc(4s * 3) infinite linear;
+          animation: floatUp calc(4s * 3) infinite linear;
+  -webkit-transform: scale(1);
+          transform: scale(1);
+}
+
+.x2 {
+  -webkit-animation: floatUp calc(7s * 3) infinite linear;
+          animation: floatUp calc(7s * 3) infinite linear;
+  -webkit-transform: scale(1.6);
+          transform: scale(1.6);
+  left: 15%;
+}
+
+.x3 {
+  -webkit-animation: floatUp calc(2.5s * 3) infinite linear;
+          animation: floatUp calc(2.5s * 3) infinite linear;
+  -webkit-transform: scale(0.5);
+          transform: scale(0.5);
+  left: -15%;
+}
+
+.x4 {
+  -webkit-animation: floatUp calc(4.5s * 3) infinite linear;
+          animation: floatUp calc(4.5s * 3) infinite linear;
+  -webkit-transform: scale(1.2);
+          transform: scale(1.2);
+  left: -34%;
+}
+
+.x5 {
+  -webkit-animation: floatUp calc(8s * 3) infinite linear;
+          animation: floatUp calc(8s * 3) infinite linear;
+  -webkit-transform: scale(2.2);
+          transform: scale(2.2);
+  left: -57%;
+}
+
+.x6 {
+  -webkit-animation: floatUp calc(3s * 3) infinite linear;
+          animation: floatUp calc(3s * 3) infinite linear;
+  -webkit-transform: scale(0.8);
+          transform: scale(0.8);
+  left: -81%;
+}
+
+.x7 {
+  -webkit-animation: floatUp calc(5.3s * 3) infinite linear;
+          animation: floatUp calc(5.3s * 3) infinite linear;
+  -webkit-transform: scale(3.2);
+          transform: scale(3.2);
+  left: 37%;
+}
+
+.x8 {
+  -webkit-animation: floatUp calc(4.7s * 3) infinite linear;
+          animation: floatUp calc(4.7s * 3) infinite linear;
+  -webkit-transform: scale(1.7);
+          transform: scale(1.7);
+  left: 62%;
+}
+
+.x9 {
+  -webkit-animation: floatUp calc(4.1s * 3) infinite linear;
+          animation: floatUp calc(4.1s * 3) infinite linear;
+  -webkit-transform: scale(0.9);
+          transform: scale(0.9);
+  left: 85%;
+}
+
+@-webkit-keyframes floatUp {
+  0% {
+    top: 100vh;
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  50% {
+    top: 0vh;
+    opacity: .8;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    top: -100vh;
+    opacity: 0;
+  }
+}
+
+@keyframes floatUp {
+  0% {
+    top: 100vh;
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  50% {
+    top: 0vh;
+    opacity: .8;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    top: -100vh;
+    opacity: 0;
+  }
+}
+/*# sourceMappingURL=background.css.map */

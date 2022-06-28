@@ -1,0 +1,105 @@
+.skip {
+  background-color: transparent;
+  border: none;
+  color: gray;
+  margin-top: 60px;
+  font-size: 20px;
+}
+
+.pfpForm {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+
+.photoLabel {
+  width: 155px;
+  height: 155px;
+  font-size: 20px !important;
+}
+
+.photoLabel svg {
+  font-size: 30px;
+}
+
+[type="file"] {
+  height: 0;
+  overflow: hidden;
+  width: 0;
+}
+
+[type="file"] + label {
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  font-family: "Rubik", sans-serif;
+  font-size: inherit;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  outline: none;
+  padding: 1rem 50px;
+  position: relative;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+  vertical-align: middle;
+}
+
+[type="file"] + label.uploadBtn {
+  border-radius: 5px !important;
+  background-color: #0093e9;
+  background-image: linear-gradient(160deg, #0093e9 0%, #80d0c7 100%);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+[type="file"] + label.uploadBtn.verified {
+  background-color: #20bf55;
+  background-image: linear-gradient(315deg, #20bf55 0%, #01baef 94%);
+}
+
+[type="file"] + label.uploadBtn svg {
+  display: inline-block;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+}
+
+[type="file"] + label.uploadBtn::before {
+  color: #fff;
+  content: "Upload";
+  font-size: 105%;
+  height: 100%;
+  left: 0;
+  line-height: 2.6;
+  position: absolute;
+  top: -180%;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+  width: 100%;
+  -webkit-text-fill-color: #fff;
+}
+
+[type="file"] + label.uploadBtn.verified::before {
+  content: "Reconsidered?";
+}
+
+[type="file"] + label.uploadBtn:hover svg {
+  -webkit-transform: translateY(300%);
+          transform: translateY(300%);
+}
+
+[type="file"] + label.uploadBtn:hover::before {
+  top: 0;
+}
+/*# sourceMappingURL=pfpForm.css.map */

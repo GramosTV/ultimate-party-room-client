@@ -1,0 +1,81 @@
+$animation-time-multiplier: 3;
+body {
+    margin: 0;
+    background: radial-gradient(#F5F7FA,#B8C6DB);
+}   
+
+.light {
+    position: fixed;
+    width: 0px;
+    opacity: .75;
+    background-color: white;
+    box-shadow: #669db2 0px 0px 12px 3px;
+    opacity: 0;
+    top: 100vh;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    margin: auto;
+    z-index: -1;
+}
+
+.x1{
+  animation: floatUp calc(4s * #{$animation-time-multiplier}) infinite linear;
+  transform: scale(1.0);
+}
+
+.x2{
+  animation: floatUp calc(7s * #{$animation-time-multiplier}) infinite linear;
+  transform: scale(1.6);
+  left: 15%;
+}
+
+.x3{
+  animation: floatUp calc(2.5s * #{$animation-time-multiplier}) infinite linear;
+  transform: scale(.5);
+  left: -15%;
+}
+
+.x4{
+  animation: floatUp calc(4.5s * #{$animation-time-multiplier}) infinite linear;
+  transform: scale(1.2);
+  left: -34%;
+}
+
+.x5{
+  animation: floatUp calc(8s * #{$animation-time-multiplier}) infinite linear;
+  transform: scale(2.2);
+  left: -57%;
+}
+
+.x6{
+  animation: floatUp calc(3s * #{$animation-time-multiplier}) infinite linear;
+  transform: scale(.8);
+  left: -81%;
+}
+
+.x7{
+  animation: floatUp calc(5.3s * #{$animation-time-multiplier}) infinite linear;
+  transform: scale(3.2);
+  left: 37%;
+}
+
+.x8{
+  animation: floatUp calc(4.7s * #{$animation-time-multiplier}) infinite linear;
+  transform: scale(1.7);
+  left: 62%;
+}
+
+.x9{
+  animation: floatUp calc(4.1s * #{$animation-time-multiplier}) infinite linear;
+  transform: scale(0.9);
+  left: 85%;
+}
+
+@keyframes floatUp{
+  0%{top: 100vh; opacity: 0;}
+  25%{opacity: 1;}
+  50%{top: 0vh; opacity: .8;}
+  75%{opacity: 1;}
+  100%{top: -100vh; opacity: 0;}
+}

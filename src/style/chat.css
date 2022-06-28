@@ -1,0 +1,84 @@
+.chatContainer {
+  margin-top: 5px;
+  padding: 10px 0;
+  border-radius: 10px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  background-color: rgba(142, 197, 252, 0.2);
+  background-image: linear-gradient(62deg, rgba(142, 197, 252, 0.2) 0%, rgba(224, 195, 252, 0.2) 74%);
+  -webkit-box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
+}
+
+.chatContainer .gradientText {
+  margin: 0;
+  min-height: auto;
+  margin-bottom: 5px;
+}
+
+.chat {
+  height: 430px;
+  -ms-flex-item-align: end;
+      align-self: flex-end;
+  overflow-y: auto;
+  width: 330px;
+  padding: 0 5px;
+  overflow-x: hidden;
+}
+
+.chat .message {
+  margin-bottom: 10px;
+  width: 320px;
+}
+
+.chat .message span {
+  width: 100%;
+  display: block;
+  text-align: left;
+  position: relative;
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.chat .message span p {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0;
+  font-weight: 400;
+  font-size: 16px;
+  padding-right: 10px;
+}
+
+.chat .message p {
+  word-wrap: break-word;
+  text-align: left;
+  font-size: 18px;
+}
+
+.confirmBtn {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  background-color: #0093e9;
+  background-image: linear-gradient(160deg, #0093e9 0%, #80d0c7 100%);
+  color: #fff;
+}
+/*# sourceMappingURL=chat.css.map */

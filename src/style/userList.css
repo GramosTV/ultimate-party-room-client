@@ -1,0 +1,225 @@
+@media (max-width: 1280px) {
+  .userList {
+    position: fixed;
+    top: 0;
+    left: 100%;
+    z-index: 10;
+    -webkit-animation: slideOut 0.6s both;
+            animation: slideOut 0.6s both;
+  }
+  .userList.animate {
+    -webkit-animation: slideIn 0.6s both;
+            animation: slideIn 0.6s both;
+  }
+}
+
+@-webkit-keyframes slideIn {
+  0% {
+    left: 100%;
+  }
+  100% {
+    left: calc(100% - 235px);
+  }
+}
+
+@keyframes slideIn {
+  0% {
+    left: 100%;
+  }
+  100% {
+    left: calc(100% - 235px);
+  }
+}
+
+@-webkit-keyframes slideOut {
+  0% {
+    left: calc(100% - 235px);
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes slideOut {
+  0% {
+    left: calc(100% - 235px);
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.userList .userBox {
+  position: relative;
+  width: 235px;
+  height: 600px;
+  background-color: rgba(142, 197, 252, 0.2);
+  background-image: linear-gradient(62deg, rgba(142, 197, 252, 0.2) 0%, rgba(224, 195, 252, 0.2) 74%);
+  -webkit-box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  z-index: 10;
+  padding: 20px;
+  -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
+}
+
+@media (max-width: 1280px) {
+  .userList .userBox {
+    padding: 10px;
+  }
+}
+
+.userList .userBox .switch {
+  display: none;
+}
+
+@media (max-width: 1280px) {
+  .userList .userBox .switch {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    position: absolute;
+    top: 70px;
+    left: -50px;
+    height: 50px;
+    width: 50px;
+    cursor: pointer;
+    background-color: rgba(142, 197, 252, 0.5);
+    background-image: linear-gradient(62deg, rgba(142, 197, 252, 0.5) 0%, rgba(224, 195, 252, 0.5) 74%);
+    -webkit-box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    z-index: 10;
+    padding: 20px;
+    -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+  }
+  .userList .userBox .switch svg {
+    font-size: 32px;
+  }
+}
+
+.userList .userBox h3 {
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1280px) {
+  .userList .userBox h3 {
+    margin-bottom: 10px;
+  }
+}
+
+.userList .userBox .list {
+  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  padding: 10px;
+  border-radius: 10px;
+  margin: 10px 0;
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
+  overflow-y: auto;
+  height: 90%;
+}
+
+.userList .userBox .list .user {
+  margin-bottom: 5px;
+  padding: 10px 2px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+}
+
+.userList .userBox .list .user .imgBx {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.userList .userBox .list .user .imgBx img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+
+.userList .userBox .list .user .imgBx div {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+
+.userList .userBox .list .user .imgBx div svg {
+  font-size: 40px;
+}
+
+.userList .userBox .list .user .imgBx div svg path {
+  color: #eee;
+}
+
+.userList .userBox .list .user .content {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  color: #fff;
+  width: 100%;
+}
+
+.userList .userBox .list .user .content h4 {
+  line-height: 1.2em;
+  font-weight: 600;
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
+  width: 100%;
+}
+/*# sourceMappingURL=userList.css.map */
