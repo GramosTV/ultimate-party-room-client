@@ -174,7 +174,8 @@ Distributed under the MIT License. See LICENSE.txt for more information.
 
 ## :handshake: Contact
 
-GramosTV - [@discord_handle](GramosTV#2410) - emeraldbob020@gmail.com
+Email - emeraldbob020@gmail.com
+Discord - GramosTV#2410
 
 Project Link: [https://github.com/GramosTV/ultimate-party-room-client](https://github.com/GramosTV/ultimate-party-room-client)
 
