@@ -138,8 +138,9 @@ html ::-webkit-scrollbar-thumb {
 #root ::-webkit-scrollbar-thumb {
   display: block;
   border-radius: 10px;
-  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-  background-color: purple;
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.25);
+          box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.25);
+  background-color: #cad6e4;
 }
 
 .intro {
