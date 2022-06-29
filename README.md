@@ -147,6 +147,12 @@ Start the server
   npm run start
 ```
 
+Head to
+
+```bash
+  http://localhost:3000
+```
+
 <!-- Deployment -->
 
 ### :triangular_flag_on_post: Deployment
