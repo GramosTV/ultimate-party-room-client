@@ -121,7 +121,7 @@ This project uses npm as package manager
 - Put https://github.com/GramosTV/ultimate-party-room-server and https://github.com/GramosTV/ultimate-party-room-client in one folder for the shared types to work.
 - Always refresh the page on client/server restart/changes, otherwise weird bugs will occur due to websockets.
 
-**Before you start, make sure to create ultimate_party_room mysql database** (typeorm wil take care of the tables)
+**Before you start, make sure to create ultimate_party_room mysql database** (typeorm will take care of the tables)
 
 Clone the project
 
@@ -145,6 +145,12 @@ Start the server
 
 ```bash
   npm run start
+```
+
+Head to
+
+```bash
+  http://localhost:3000
 ```
 
 <!-- Deployment -->
@@ -174,7 +180,8 @@ Distributed under the MIT License. See LICENSE.txt for more information.
 
 ## :handshake: Contact
 
-GramosTV - [@discord_handle](GramosTV#2410) - emeraldbob020@gmail.com
+Email - emeraldbob020@gmail.com
+Discord - GramosTV#2410
 
 Project Link: [https://github.com/GramosTV/ultimate-party-room-client](https://github.com/GramosTV/ultimate-party-room-client)
 
